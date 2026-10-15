@@ -1,0 +1,1344 @@
+{
+  "restaurant": {
+    "name": "Rocco's Pizza",
+    "tagline": "Stone-baked pizza, sides and shakes since 1998",
+    "currency": "gbp",
+    "allergenNotice": "All food is prepared in a kitchen that handles gluten, milk, eggs, mustard, soya, sesame and nuts. Please tell us about any allergies before you order."
+  },
+  "items": [
+    {
+      "id": "margherita",
+      "category": "pizza",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Margherita",
+      "description": "Tomato sauce, mozzarella, oregano, basil oil",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "oregano",
+        "basil oil"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 949,
+          "lookupKey": "margherita_small",
+          "priceId": "price_1UQsuPFBUcm5jGvfXlK4bIYL"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1199,
+          "lookupKey": "margherita_medium",
+          "priceId": "price_1UQsuQFBUcm5jGvfpw6L02vE"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1399,
+          "lookupKey": "margherita_large",
+          "priceId": "price_1UQsuQFBUcm5jGvfRWQVQoHY"
+        }
+      ],
+      "productId": "prod_VRmPWyfW1j2m1C"
+    },
+    {
+      "id": "pepperoni",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Pepperoni",
+      "description": "Tomato sauce, mozzarella, double pepperoni",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "pepperoni"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1099,
+          "lookupKey": "pepperoni_small",
+          "priceId": "price_1UQsuQFBUcm5jGvfiw0EEdRM"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1349,
+          "lookupKey": "pepperoni_medium",
+          "priceId": "price_1UQsuRFBUcm5jGvfpDo7cghA"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1599,
+          "lookupKey": "pepperoni_large",
+          "priceId": "price_1UQsuRFBUcm5jGvfAgHmlw3X"
+        }
+      ],
+      "productId": "prod_VRmP3sS4xqNb1O"
+    },
+    {
+      "id": "hawaiian",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Hawaiian",
+      "description": "Tomato sauce, mozzarella, ham, pineapple",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "ham",
+        "pineapple"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1099,
+          "lookupKey": "hawaiian_small",
+          "priceId": "price_1UQsuRFBUcm5jGvf63JFcR1U"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1349,
+          "lookupKey": "hawaiian_medium",
+          "priceId": "price_1UQsuRFBUcm5jGvfY9nlbwxG"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1599,
+          "lookupKey": "hawaiian_large",
+          "priceId": "price_1UQsuSFBUcm5jGvforAPsYs7"
+        }
+      ],
+      "productId": "prod_VRmQYL9mV6zpJT"
+    },
+    {
+      "id": "vegetarian_supreme",
+      "category": "pizza",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Vegetarian Supreme",
+      "description": "Tomato sauce, mozzarella, mushrooms, green peppers, red onion, sweetcorn, black olives",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "mushrooms",
+        "green peppers",
+        "red onion",
+        "sweetcorn",
+        "black olives"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1099,
+          "lookupKey": "vegetarian_supreme_small",
+          "priceId": "price_1UQsuSFBUcm5jGvfiTcCCa2h"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1349,
+          "lookupKey": "vegetarian_supreme_medium",
+          "priceId": "price_1UQsuSFBUcm5jGvfA2QrB3jw"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1599,
+          "lookupKey": "vegetarian_supreme_large",
+          "priceId": "price_1UQsuTFBUcm5jGvfQsxu8zlK"
+        }
+      ],
+      "productId": "prod_VRmT3HhKEGiKKP"
+    },
+    {
+      "id": "vegan_garden",
+      "category": "pizza",
+      "dietary": [
+        "vegetarian",
+        "vegan"
+      ],
+      "allergens": [
+        "gluten"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Vegan Garden",
+      "description": "Tomato sauce, vegan mozzarella, spinach, mushrooms, roasted peppers, red onion, black olives",
+      "toppings": [
+        "tomato sauce",
+        "vegan mozzarella",
+        "spinach",
+        "mushrooms",
+        "roasted peppers",
+        "red onion",
+        "black olives"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1149,
+          "lookupKey": "vegan_garden_small",
+          "priceId": "price_1UQsuTFBUcm5jGvfVGZK59or"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1399,
+          "lookupKey": "vegan_garden_medium",
+          "priceId": "price_1UQsuTFBUcm5jGvfjZOGJCHz"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1649,
+          "lookupKey": "vegan_garden_large",
+          "priceId": "price_1UQsuUFBUcm5jGvfzZp3FLYD"
+        }
+      ],
+      "productId": "prod_VRmTFCQFlCvN0p"
+    },
+    {
+      "id": "bbq_chicken",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk",
+        "mustard",
+        "celery"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "BBQ Chicken",
+      "description": "BBQ sauce base, mozzarella, roast chicken, red onion, green peppers, sweetcorn",
+      "toppings": [
+        "bbq sauce",
+        "mozzarella",
+        "roast chicken",
+        "red onion",
+        "green peppers",
+        "sweetcorn"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1199,
+          "lookupKey": "bbq_chicken_small",
+          "priceId": "price_1UQsuUFBUcm5jGvfjzjNC45x"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1449,
+          "lookupKey": "bbq_chicken_medium",
+          "priceId": "price_1UQsuUFBUcm5jGvfY3mihCrm"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1699,
+          "lookupKey": "bbq_chicken_large",
+          "priceId": "price_1UQsuVFBUcm5jGvfWkwOECxR"
+        }
+      ],
+      "productId": "prod_VRmTiIf3mcAqjN"
+    },
+    {
+      "id": "chicken_tikka",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk",
+        "mustard"
+      ],
+      "spiceLevel": 2,
+      "popular": false,
+      "name": "Chicken Tikka",
+      "description": "Tomato sauce, mozzarella, tikka chicken, red onion, green peppers, green chillies, mint yoghurt drizzle",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "tikka chicken",
+        "red onion",
+        "green peppers",
+        "green chillies",
+        "mint yoghurt"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1199,
+          "lookupKey": "chicken_tikka_small",
+          "priceId": "price_1UQsuVFBUcm5jGvfc8yE0Ubj"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1449,
+          "lookupKey": "chicken_tikka_medium",
+          "priceId": "price_1UQsuVFBUcm5jGvfKsBRBMnD"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1699,
+          "lookupKey": "chicken_tikka_large",
+          "priceId": "price_1UQsuWFBUcm5jGvfEXmFVxCv"
+        }
+      ],
+      "productId": "prod_VRmTfIeoRVgNLh"
+    },
+    {
+      "id": "hot_and_spicy",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 3,
+      "popular": false,
+      "name": "Hot & Spicy",
+      "description": "Tomato sauce, mozzarella, pepperoni, spicy beef, jalapeños, red onion, green chillies",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "pepperoni",
+        "spicy beef",
+        "jalapeños",
+        "red onion",
+        "green chillies"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1199,
+          "lookupKey": "hot_and_spicy_small",
+          "priceId": "price_1UQsuWFBUcm5jGvfXxutWsyF"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1449,
+          "lookupKey": "hot_and_spicy_medium",
+          "priceId": "price_1UQsuWFBUcm5jGvfW0lUEt0f"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1699,
+          "lookupKey": "hot_and_spicy_large",
+          "priceId": "price_1UQsuXFBUcm5jGvfYtlt8d7r"
+        }
+      ],
+      "productId": "prod_VRmTjyywKN5XQh"
+    },
+    {
+      "id": "meat_feast",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Meat Feast",
+      "description": "Tomato sauce, mozzarella, pepperoni, ham, spicy beef, Italian sausage, roast chicken",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "pepperoni",
+        "ham",
+        "spicy beef",
+        "italian sausage",
+        "roast chicken"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1249,
+          "lookupKey": "meat_feast_small",
+          "priceId": "price_1UQsuXFBUcm5jGvfyFoCoRP4"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1499,
+          "lookupKey": "meat_feast_medium",
+          "priceId": "price_1UQsuXFBUcm5jGvftIcwqHmE"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1749,
+          "lookupKey": "meat_feast_large",
+          "priceId": "price_1UQsuYFBUcm5jGvfYaTEpND7"
+        }
+      ],
+      "productId": "prod_VRmT3jcIutOXSD"
+    },
+    {
+      "id": "doner_special",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk",
+        "eggs",
+        "soya"
+      ],
+      "spiceLevel": 1,
+      "popular": false,
+      "name": "Doner Special",
+      "description": "Tomato sauce, mozzarella, doner meat, red onion, green chillies, garlic mayo drizzle",
+      "toppings": [
+        "tomato sauce",
+        "mozzarella",
+        "doner meat",
+        "red onion",
+        "green chillies",
+        "garlic mayo"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1249,
+          "lookupKey": "doner_special_small",
+          "priceId": "price_1UQsuYFBUcm5jGvfCj3BPVbp"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1499,
+          "lookupKey": "doner_special_medium",
+          "priceId": "price_1UQsuYFBUcm5jGvfXTs2Z63P"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1749,
+          "lookupKey": "doner_special_large",
+          "priceId": "price_1UQsuZFBUcm5jGvfvzeFc8fN"
+        }
+      ],
+      "productId": "prod_VRmTrVzQY6RFf7"
+    },
+    {
+      "id": "nduja_hot_honey",
+      "category": "pizza",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 2,
+      "popular": false,
+      "name": "Rocco's Nduja & Hot Honey",
+      "description": "House special. Tomato sauce, fior di latte, spicy nduja, hot honey, rocket, parmesan",
+      "toppings": [
+        "tomato sauce",
+        "fior di latte",
+        "nduja",
+        "hot honey",
+        "rocket",
+        "parmesan"
+      ],
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 1299,
+          "lookupKey": "nduja_hot_honey_small",
+          "priceId": "price_1UQsuZFBUcm5jGvfCbM7tOBc"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 1549,
+          "lookupKey": "nduja_hot_honey_medium",
+          "priceId": "price_1UQsuZFBUcm5jGvf7Q418oNO"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 1799,
+          "lookupKey": "nduja_hot_honey_large",
+          "priceId": "price_1UQsuaFBUcm5jGvf6VXsrT7M"
+        }
+      ],
+      "productId": "prod_VRmQyHFAl5M8HZ"
+    },
+    {
+      "id": "extra_topping",
+      "category": "pizza_extra",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Extra topping",
+      "description": "Any topping from the menu, priced by pizza size",
+      "appliesTo": "pizza",
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 129,
+          "lookupKey": "extra_topping_small",
+          "priceId": "price_1UQsuaFBUcm5jGvftzbCGxDP"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 149,
+          "lookupKey": "extra_topping_medium",
+          "priceId": "price_1UQsuaFBUcm5jGvfeAbTujkI"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 179,
+          "lookupKey": "extra_topping_large",
+          "priceId": "price_1UQsubFBUcm5jGvfPKcP74bH"
+        }
+      ],
+      "productId": "prod_VRmQO6n2LXSDPE"
+    },
+    {
+      "id": "stuffed_crust",
+      "category": "pizza_extra",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Stuffed crust",
+      "description": "Mozzarella-stuffed crust, priced by pizza size",
+      "appliesTo": "pizza",
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 199,
+          "lookupKey": "stuffed_crust_small",
+          "priceId": "price_1UQsubFBUcm5jGvfvK6Ek3vT"
+        },
+        {
+          "size": "medium",
+          "label": "Medium 12\"",
+          "unitAmount": 249,
+          "lookupKey": "stuffed_crust_medium",
+          "priceId": "price_1UQsubFBUcm5jGvfquoLQGqq"
+        },
+        {
+          "size": "large",
+          "label": "Large 14\"",
+          "unitAmount": 299,
+          "lookupKey": "stuffed_crust_large",
+          "priceId": "price_1UQsucFBUcm5jGvfUY5fstNC"
+        }
+      ],
+      "productId": "prod_VRmTLg3GfKNEHA"
+    },
+    {
+      "id": "gluten_free_base",
+      "category": "pizza_extra",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Gluten-free base",
+      "description": "Swap to a gluten-free base. Small 10\" only. Prepared in a kitchen that handles gluten",
+      "appliesTo": "pizza",
+      "prices": [
+        {
+          "size": "small",
+          "label": "Small 10\"",
+          "unitAmount": 200,
+          "lookupKey": "gluten_free_base_small",
+          "priceId": "price_1UQsucFBUcm5jGvfmvb8EJU3"
+        }
+      ],
+      "productId": "prod_VRmTKfW8Xj5m91"
+    },
+    {
+      "id": "garlic_bread",
+      "category": "side",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Garlic bread",
+      "description": "Four slices of stone-baked garlic bread",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "4 slices",
+          "unitAmount": 399,
+          "lookupKey": "garlic_bread_regular",
+          "priceId": "price_1UQsudFBUcm5jGvftf54GppG"
+        }
+      ],
+      "productId": "prod_VRmQpICJWUTioh"
+    },
+    {
+      "id": "cheesy_garlic_bread",
+      "category": "side",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Cheesy garlic bread",
+      "description": "Four slices of garlic bread topped with melted mozzarella",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "4 slices",
+          "unitAmount": 499,
+          "lookupKey": "cheesy_garlic_bread_regular",
+          "priceId": "price_1UQsudFBUcm5jGvf2hvSg8gZ"
+        }
+      ],
+      "productId": "prod_VRmTHaX1e3TNCZ"
+    },
+    {
+      "id": "chips",
+      "category": "side",
+      "dietary": [
+        "vegetarian",
+        "vegan"
+      ],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Chips",
+      "description": "Skin-on chips with sea salt",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Regular",
+          "unitAmount": 299,
+          "lookupKey": "chips_regular",
+          "priceId": "price_1UQsueFBUcm5jGvfoQhhBeMX"
+        }
+      ],
+      "productId": "prod_VRmTz12SPJBqxU"
+    },
+    {
+      "id": "cheesy_chips",
+      "category": "side",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Cheesy chips",
+      "description": "Skin-on chips loaded with melted cheddar",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Regular",
+          "unitAmount": 399,
+          "lookupKey": "cheesy_chips_regular",
+          "priceId": "price_1UQsueFBUcm5jGvfyrT2qLWK"
+        }
+      ],
+      "productId": "prod_VRmTsySNgYF4ue"
+    },
+    {
+      "id": "potato_wedges",
+      "category": "side",
+      "dietary": [
+        "vegetarian",
+        "vegan"
+      ],
+      "allergens": [
+        "celery"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Potato wedges",
+      "description": "Seasoned potato wedges",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Regular",
+          "unitAmount": 399,
+          "lookupKey": "potato_wedges_regular",
+          "priceId": "price_1UQsufFBUcm5jGvfNI5jlnLr"
+        }
+      ],
+      "productId": "prod_VRmTCjQZu0jKdL"
+    },
+    {
+      "id": "chicken_wings",
+      "category": "side",
+      "dietary": [],
+      "allergens": [
+        "celery",
+        "mustard"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Chicken wings",
+      "description": "Crispy wings tossed in your choice of sauce",
+      "options": [
+        {
+          "name": "sauce",
+          "required": true,
+          "choices": [
+            "BBQ",
+            "Buffalo",
+            "Salt & pepper"
+          ]
+        }
+      ],
+      "prices": [
+        {
+          "size": "six",
+          "label": "6 wings",
+          "unitAmount": 599,
+          "lookupKey": "chicken_wings_six",
+          "priceId": "price_1UQsufFBUcm5jGvfOQF5wFpl"
+        },
+        {
+          "size": "twelve",
+          "label": "12 wings",
+          "unitAmount": 1049,
+          "lookupKey": "chicken_wings_twelve",
+          "priceId": "price_1UQsufFBUcm5jGvfsIT6OS2H"
+        }
+      ],
+      "productId": "prod_VRmQ10U7lkkM4f"
+    },
+    {
+      "id": "chicken_strips",
+      "category": "side",
+      "dietary": [],
+      "allergens": [
+        "gluten",
+        "eggs"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Chicken strips",
+      "description": "Five breaded chicken breast strips",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "5 strips",
+          "unitAmount": 549,
+          "lookupKey": "chicken_strips_regular",
+          "priceId": "price_1UQsugFBUcm5jGvfh1EOnH2V"
+        }
+      ],
+      "productId": "prod_VRmTYse2Qwdt1H"
+    },
+    {
+      "id": "mozzarella_sticks",
+      "category": "side",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk",
+        "eggs"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Mozzarella sticks",
+      "description": "Six breaded mozzarella sticks",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "6 sticks",
+          "unitAmount": 499,
+          "lookupKey": "mozzarella_sticks_regular",
+          "priceId": "price_1UQsugFBUcm5jGvf1LCm22Pz"
+        }
+      ],
+      "productId": "prod_VRmTUqfI0BbRGF"
+    },
+    {
+      "id": "onion_rings",
+      "category": "side",
+      "dietary": [
+        "vegetarian",
+        "vegan"
+      ],
+      "allergens": [
+        "gluten"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Onion rings",
+      "description": "Eight battered onion rings",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "8 rings",
+          "unitAmount": 349,
+          "lookupKey": "onion_rings_regular",
+          "priceId": "price_1UQsuhFBUcm5jGvfl6NHaZn5"
+        }
+      ],
+      "productId": "prod_VRmT0Cke1s0kPV"
+    },
+    {
+      "id": "coleslaw",
+      "category": "side",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "eggs",
+        "mustard"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Coleslaw",
+      "description": "Creamy house coleslaw",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Pot",
+          "unitAmount": 199,
+          "lookupKey": "coleslaw_regular",
+          "priceId": "price_1UQsuhFBUcm5jGvffdbghTds"
+        }
+      ],
+      "productId": "prod_VRmTS5hE5RKA3O"
+    },
+    {
+      "id": "garlic_and_herb_dip",
+      "category": "dip",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "eggs",
+        "milk"
+      ],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Garlic & herb dip",
+      "description": "The classic",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Pot",
+          "unitAmount": 99,
+          "lookupKey": "garlic_and_herb_dip_regular",
+          "priceId": "price_1UQsuiFBUcm5jGvf7mC3D7NQ"
+        }
+      ],
+      "productId": "prod_VRmTfH5oIE2d9h"
+    },
+    {
+      "id": "bbq_dip",
+      "category": "dip",
+      "dietary": [
+        "vegetarian",
+        "vegan"
+      ],
+      "allergens": [
+        "mustard",
+        "celery"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "BBQ dip",
+      "description": "Smoky BBQ sauce",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Pot",
+          "unitAmount": 99,
+          "lookupKey": "bbq_dip_regular",
+          "priceId": "price_1UQsuiFBUcm5jGvf537HU5Z6"
+        }
+      ],
+      "productId": "prod_VRmTwOWgDUHPlz"
+    },
+    {
+      "id": "sweet_chilli_dip",
+      "category": "dip",
+      "dietary": [
+        "vegetarian",
+        "vegan"
+      ],
+      "allergens": [],
+      "spiceLevel": 1,
+      "popular": false,
+      "name": "Sweet chilli dip",
+      "description": "Sweet and mildly spicy",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Pot",
+          "unitAmount": 99,
+          "lookupKey": "sweet_chilli_dip_regular",
+          "priceId": "price_1UQsujFBUcm5jGvfZ6x6LJNn"
+        }
+      ],
+      "productId": "prod_VRmTT4GcPSBGmE"
+    },
+    {
+      "id": "hot_buffalo_dip",
+      "category": "dip",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "milk"
+      ],
+      "spiceLevel": 2,
+      "popular": false,
+      "name": "Hot buffalo dip",
+      "description": "Tangy and hot",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Pot",
+          "unitAmount": 99,
+          "lookupKey": "hot_buffalo_dip_regular",
+          "priceId": "price_1UQsujFBUcm5jGvfHqS5NuaF"
+        }
+      ],
+      "productId": "prod_VRmTKmdSvWdy92"
+    },
+    {
+      "id": "coca_cola",
+      "category": "drink",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Coca-Cola",
+      "description": "Original taste",
+      "prices": [
+        {
+          "size": "can",
+          "label": "330ml can",
+          "unitAmount": 170,
+          "lookupKey": "coca_cola_can",
+          "priceId": "price_1UQsukFBUcm5jGvftsAm8Sx9"
+        },
+        {
+          "size": "bottle",
+          "label": "1.5L bottle",
+          "unitAmount": 349,
+          "lookupKey": "coca_cola_bottle",
+          "priceId": "price_1UQsukFBUcm5jGvf1c9KdsLO"
+        }
+      ],
+      "productId": "prod_VRmQ89hYNepnLm"
+    },
+    {
+      "id": "diet_coke",
+      "category": "drink",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Diet Coke",
+      "description": "No sugar",
+      "prices": [
+        {
+          "size": "can",
+          "label": "330ml can",
+          "unitAmount": 170,
+          "lookupKey": "diet_coke_can",
+          "priceId": "price_1UQsukFBUcm5jGvfN6ULSa5N"
+        },
+        {
+          "size": "bottle",
+          "label": "1.5L bottle",
+          "unitAmount": 349,
+          "lookupKey": "diet_coke_bottle",
+          "priceId": "price_1UQsulFBUcm5jGvfFDAPypyl"
+        }
+      ],
+      "productId": "prod_VRmQrJIZ6UVy8V"
+    },
+    {
+      "id": "coke_zero",
+      "category": "drink",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Coca-Cola Zero Sugar",
+      "description": "No sugar",
+      "prices": [
+        {
+          "size": "can",
+          "label": "330ml can",
+          "unitAmount": 170,
+          "lookupKey": "coke_zero_can",
+          "priceId": "price_1UQsulFBUcm5jGvfNIjcPUG9"
+        },
+        {
+          "size": "bottle",
+          "label": "1.5L bottle",
+          "unitAmount": 349,
+          "lookupKey": "coke_zero_bottle",
+          "priceId": "price_1UQsulFBUcm5jGvfP0iR95Nb"
+        }
+      ],
+      "productId": "prod_VRmT04IIGMIFuH"
+    },
+    {
+      "id": "fanta_orange",
+      "category": "drink",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Fanta Orange",
+      "description": "Orange",
+      "prices": [
+        {
+          "size": "can",
+          "label": "330ml can",
+          "unitAmount": 170,
+          "lookupKey": "fanta_orange_can",
+          "priceId": "price_1UQsumFBUcm5jGvfEMuveVxW"
+        },
+        {
+          "size": "bottle",
+          "label": "1.5L bottle",
+          "unitAmount": 349,
+          "lookupKey": "fanta_orange_bottle",
+          "priceId": "price_1UQsumFBUcm5jGvfbaXKWV6x"
+        }
+      ],
+      "productId": "prod_VRmTmBlKMOMAp7"
+    },
+    {
+      "id": "sprite",
+      "category": "drink",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Sprite",
+      "description": "Lemon and lime",
+      "prices": [
+        {
+          "size": "can",
+          "label": "330ml can",
+          "unitAmount": 170,
+          "lookupKey": "sprite_can",
+          "priceId": "price_1UQsunFBUcm5jGvfpF3mYWlw"
+        },
+        {
+          "size": "bottle",
+          "label": "1.5L bottle",
+          "unitAmount": 349,
+          "lookupKey": "sprite_bottle",
+          "priceId": "price_1UQsunFBUcm5jGvfkyFF72eH"
+        }
+      ],
+      "productId": "prod_VRmTYh4uqVum7p"
+    },
+    {
+      "id": "still_water",
+      "category": "drink",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Still water",
+      "description": "Spring water",
+      "prices": [
+        {
+          "size": "bottle",
+          "label": "500ml bottle",
+          "unitAmount": 120,
+          "lookupKey": "still_water_bottle",
+          "priceId": "price_1UQsunFBUcm5jGvfopij7l1o"
+        }
+      ],
+      "productId": "prod_VRmT49P0ZwPSk5"
+    },
+    {
+      "id": "chocolate_fudge_cake",
+      "category": "dessert",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk",
+        "eggs",
+        "soya"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Chocolate fudge cake",
+      "description": "A warm slice of chocolate fudge cake",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Slice",
+          "unitAmount": 449,
+          "lookupKey": "chocolate_fudge_cake_regular",
+          "priceId": "price_1UQsuoFBUcm5jGvfO56jPXhu"
+        }
+      ],
+      "productId": "prod_VRmTes3v7p1isp"
+    },
+    {
+      "id": "warm_cookie_dough",
+      "category": "dessert",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "gluten",
+        "milk",
+        "eggs",
+        "soya"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Warm cookie dough",
+      "description": "Gooey baked cookie dough with chocolate chunks",
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Regular",
+          "unitAmount": 499,
+          "lookupKey": "warm_cookie_dough_regular",
+          "priceId": "price_1UQsuoFBUcm5jGvfOpdZbMQE"
+        }
+      ],
+      "productId": "prod_VRmTqjUZuguDX1"
+    },
+    {
+      "id": "ice_cream_tub",
+      "category": "dessert",
+      "dietary": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "milk",
+        "eggs",
+        "gluten",
+        "soya"
+      ],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Ben & Jerry's tub",
+      "description": "465ml tub of ice cream",
+      "options": [
+        {
+          "name": "flavour",
+          "required": true,
+          "choices": [
+            "Cookie Dough",
+            "Chocolate Fudge Brownie",
+            "Phish Food"
+          ]
+        }
+      ],
+      "prices": [
+        {
+          "size": "regular",
+          "label": "465ml tub",
+          "unitAmount": 749,
+          "lookupKey": "ice_cream_tub_regular",
+          "priceId": "price_1UQsupFBUcm5jGvfkonkotyL"
+        }
+      ],
+      "productId": "prod_VRmTitaoaHj0mI"
+    },
+    {
+      "id": "solo_deal",
+      "category": "meal_deal",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Solo deal",
+      "description": "Any small pizza, a side and a can",
+      "includes": [
+        {
+          "category": "pizza",
+          "size": "small",
+          "quantity": 1
+        },
+        {
+          "choiceOf": [
+            "garlic_bread",
+            "chips",
+            "potato_wedges"
+          ],
+          "quantity": 1
+        },
+        {
+          "category": "drink",
+          "size": "can",
+          "quantity": 1
+        }
+      ],
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Deal",
+          "unitAmount": 1499,
+          "lookupKey": "solo_deal_regular",
+          "priceId": "price_1UQsupFBUcm5jGvf0jyVc6zg"
+        }
+      ],
+      "productId": "prod_VRmTiTxtCzaEGM"
+    },
+    {
+      "id": "meal_for_two",
+      "category": "meal_deal",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": true,
+      "name": "Meal for two",
+      "description": "Any two medium pizzas, two sides and a 1.5L bottle",
+      "includes": [
+        {
+          "category": "pizza",
+          "size": "medium",
+          "quantity": 2
+        },
+        {
+          "choiceOf": [
+            "garlic_bread",
+            "chips",
+            "potato_wedges",
+            "onion_rings",
+            "coleslaw"
+          ],
+          "quantity": 2
+        },
+        {
+          "category": "drink",
+          "size": "bottle",
+          "quantity": 1
+        }
+      ],
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Deal",
+          "unitAmount": 2999,
+          "lookupKey": "meal_for_two_regular",
+          "priceId": "price_1UQsuqFBUcm5jGvfdUKINycL"
+        }
+      ],
+      "productId": "prod_VRmTugxGkJv1FT"
+    },
+    {
+      "id": "family_feast",
+      "category": "meal_deal",
+      "dietary": [],
+      "allergens": [],
+      "spiceLevel": 0,
+      "popular": false,
+      "name": "Family feast",
+      "description": "Any two large pizzas, cheesy garlic bread, 6 wings, chips and a 1.5L bottle",
+      "includes": [
+        {
+          "category": "pizza",
+          "size": "large",
+          "quantity": 2
+        },
+        {
+          "item": "cheesy_garlic_bread",
+          "quantity": 1
+        },
+        {
+          "item": "chicken_wings",
+          "size": "six",
+          "quantity": 1
+        },
+        {
+          "item": "chips",
+          "quantity": 1
+        },
+        {
+          "category": "drink",
+          "size": "bottle",
+          "quantity": 1
+        }
+      ],
+      "prices": [
+        {
+          "size": "regular",
+          "label": "Deal",
+          "unitAmount": 3999,
+          "lookupKey": "family_feast_regular",
+          "priceId": "price_1UQsuqFBUcm5jGvfSS8JxVnW"
+        }
+      ],
+      "productId": "prod_VRmTQn9SLvvf3o"
+    }
+  ]
+}
