@@ -71,6 +71,14 @@ export default function App() {
   const buildRef = useRef(null)
   buildRef.current = order.build
   const live = useLiveFeed(dispatch, buildRef)
+  // Tell the server when build your own opens/closes so its agents don't treat build speech as menu orders.
+  const building = !!order.build
+  useEffect(() => { if (IS_LIVE) live.send({ type: 'build', on: building }) }, [building])
+  // Send finished build-your-own pizzas so the server prices them from the menu and puts them in Checkout.
+  const customPizzas = JSON.stringify(order.lines.filter((line) => line.custom).map((line) => ({
+    size: line.size, extras: line.extras, toppings: line.custom.toppings.map((t) => t.id), qty: line.quantity ?? 1,
+  })))
+  useEffect(() => { if (IS_LIVE) live.send({ type: 'custom', pizzas: JSON.parse(customPizzas) }) }, [customPizzas])
   const [glow, setGlow] = useState(null)
   const [flashes, setFlashes] = useState({})
   const [demoHidden, setDemoHidden] = useState(IS_LIVE)
@@ -126,7 +134,10 @@ export default function App() {
       dispatch({ type: 'add', item: nudge.item.id, size: nudge.size, quote: null })
     },
     choose: (line, name, choice) => dispatch({ type: 'update', line: line.id, options: { [name]: choice }, quote: null }),
-    finish: () => dispatch({ type: 'confirm_request' }),
+    finish: () => {
+      dispatch({ type: 'confirm_request' })
+      if (IS_LIVE) live.send({ type: 'done' }) // server reads the order back, then waits for "yes"
+    },
     confirm: () => {
       dispatch({ type: 'confirmed' })
       if (IS_LIVE) live.send({ type: 'done' })
@@ -174,7 +185,7 @@ export default function App() {
 
       <MenuBoard lines={order.lines} glowItemId={glow?.itemId} spotlight={spotlight} onPick={actions.pick} onBuild={actions.build} />
       {USE_TICKET ? <Ticket order={order} flashes={flashes} actions={actions} /> : <ReceiptPrinter order={order} actions={actions} />}
-      <Captions captions={order.captions} live={IS_LIVE ? { on: live.micOn, button: live.toggleMic } : { on: true }} />
+      <Captions captions={order.captions} live={IS_LIVE ? { on: live.micOn, state: live.voice, button: live.toggleMic } : { on: true }} />
       <Suspense fallback={null}>
         <AnimatePresence>
           {order.build && <BuildMode key="build" build={order.build} captions={order.captions} dispatch={dispatch} />}

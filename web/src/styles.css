@@ -636,6 +636,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .mic-button { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 999px; background: var(--board-raised); font-size: 12px; font-weight: 600; transition: transform 160ms var(--ease-out); }
 .mic-button:active { transform: scale(0.97); }
 .listening-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cream-faint); }
+/* Live mode voice states (web/shared/voice.ts): calibrating the room, kiosk talking, below the noise gate. */
+.mic-button[data-state='calibrating'] .listening-dot { background: #f5a623; box-shadow: none; }
+.mic-button[data-state='speaking'] .listening-dot { background: #4a8cff; box-shadow: none; }
+.mic-button[data-state='idle'] .listening-dot { animation: none; opacity: 0.55; }
 [data-on='true'] .listening-dot, .listening[data-on='true'] > .listening-dot { background: var(--tomato); animation: breathe 1.6s ease-in-out infinite; }
 @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 

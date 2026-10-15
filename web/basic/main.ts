@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { bargeIn, initVoice, micOn, say, startMic, stopMic, stopSpeaking, unlockAudio } from "../shared/voice";
 
 // ---- WS contract -------------------------------------------------------------------------
 interface CartLine {
@@ -11,7 +12,10 @@ type ServerMsg =
   | { type: "notice"; text: string }
   | { type: "checkout"; url: string }
   | { type: "paid" }
-  | { type: "error"; text: string };
+  | { type: "error"; text: string }
+  | { type: "say"; text: string; audio_url: string; id: string; turn: number | null }
+  | { type: "stop_speaking" }
+  | { type: "status"; status: "ordering" | "awaiting_confirmation" | "awaiting_payment" | "paid" };
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const transcriptEl = $("transcript");
@@ -36,7 +40,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&
 // ---- WebSocket ---------------------------------------------------------------------------
 let ws: WebSocket;
 function connect() {
-  ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?bargein=${bargeIn ? 1 : 0}`);
   ws.binaryType = "arraybuffer";
   ws.onopen = () => connDot.classList.add("on");
   ws.onclose = () => { connDot.classList.remove("on"); setTimeout(connect, 1000); };
@@ -52,6 +56,8 @@ function handle(msg: ServerMsg) {
     case "error": return addNotice(msg.text, "error");
     case "checkout": return showCheckout(msg.url);
     case "paid": return showPaid();
+    case "say": return say(msg);
+    case "stop_speaking": return stopSpeaking();
   }
 }
 
@@ -133,6 +139,7 @@ function showPaid() {
 function doReset() {
   clearTimeout(resetTimer);
   overlay.classList.add("hidden");
+  stopSpeaking();
   send({ type: "reset" });
   transcriptEl.innerHTML = `<p class="placeholder">Tap <b>Start</b> and tell us what you'd like.</p>`;
   interimEl = null;
@@ -143,25 +150,18 @@ function doReset() {
 }
 
 // ---- Mic ---------------------------------------------------------------------------------
-let recorder: MediaRecorder | null = null;
+// Capture, noise gate, level meter and playback live in voice.ts (16 kHz PCM to the server; mic stays open).
 async function toggleMic() {
-  if (recorder) {
-    recorder.stop();
-    recorder.stream.getTracks().forEach((t) => t.stop());
-    recorder = null;
+  if (micOn()) {
+    stopMic();
     startBtn.textContent = "🎙 Start";
     startBtn.classList.remove("live");
     micStatus.textContent = "Mic off";
     return;
   }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    const mimeType = ["audio/webm;codecs=opus", "audio/webm"].find((t) => MediaRecorder.isTypeSupported(t));
-    recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    recorder.ondataavailable = async (e) => {
-      if (e.data.size && ws.readyState === WebSocket.OPEN) ws.send(await e.data.arrayBuffer());
-    };
-    recorder.start(250);
+    await startMic();
+    send({ type: "hello" });
     startBtn.textContent = "■ Stop";
     startBtn.classList.add("live");
     micStatus.textContent = "Listening…";
@@ -171,7 +171,8 @@ async function toggleMic() {
 }
 
 // ---- Wire up -----------------------------------------------------------------------------
-startBtn.onclick = toggleMic;
+startBtn.onclick = () => { unlockAudio(); void toggleMic(); };
+initVoice(send, (buf) => ws?.readyState === WebSocket.OPEN && ws.send(buf));
 $("done").onclick = () => send({ type: "done" });
 $("reset").onclick = doReset;
 overlay.onclick = doReset;

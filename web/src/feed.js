@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { isBuildRequest, parseBuildUtterance } from './build/buildModel'
 import { BUILD_SCRIPT, DEMO_SCRIPT } from './demoScript'
 import { ITEMS_BY_ID, defaultSize } from './menu'
+import { bargeIn, initVoice, micOn as voiceMicOn, say as playSay, startMic, stopMic, stopSpeaking, unlockAudio } from '../shared/voice'
 
 const params = new URLSearchParams(location.search)
 export const IS_LIVE = params.has('live')
@@ -87,13 +88,27 @@ const cartKey = (line) => line.menu_id
 export const useLiveFeed = (dispatch, buildRef) => {
   const socket = useRef(null)
   const previous = useRef(new Map())
-  const recorder = useRef(null)
   const [connected, setConnected] = useState(false)
   const [micOn, setMicOn] = useState(false)
+  // Mic / kiosk audio state from web/shared/voice.ts: off | calibrating | idle | open | speaking
+  const [voice, setVoice] = useState('off')
+  // Server order status: ordering | awaiting_confirmation | awaiting_payment | paid
+  const [status, setStatus] = useState('ordering')
+  // The kiosk's spoken reply arrives one sentence per {type:'say'}; sentences of one turn share a caption.
+  const agentLine = useRef(null) // { turn, text } while the current reply is still being spoken
 
   const send = useCallback((message) => {
     if (socket.current?.readyState === WebSocket.OPEN) socket.current.send(JSON.stringify(message))
   }, [])
+
+  const finishTimer = useRef(null)
+
+  const finishAgentLine = useCallback(() => {
+    clearTimeout(finishTimer.current)
+    if (!agentLine.current) return
+    dispatch({ type: 'utterance', speaker: 'agent', text: agentLine.current.text, final: true })
+    agentLine.current = null
+  }, [dispatch])
 
   useEffect(() => {
     if (!IS_LIVE) return
@@ -116,8 +131,42 @@ export const useLiveFeed = (dispatch, buildRef) => {
       previous.current = next
     }
 
+    initVoice(send, (buffer) => {
+      if (socket.current?.readyState === WebSocket.OPEN) socket.current.send(buffer)
+    }, {
+      dom: false,
+      onState: (state) => {
+        setVoice(state)
+        // Settle the caption once the kiosk has been quiet a moment (sentences can arrive with small gaps).
+        clearTimeout(finishTimer.current)
+        if (state !== 'speaking' && state !== 'calibrating') finishTimer.current = setTimeout(finishAgentLine, 1500)
+      },
+    })
+
     const handle = (message) => {
+      if (message.type === 'say') {
+        // Show the words in Alex's captions (same 'utterance' events the demo uses) and queue the audio.
+        const turn = message.turn ?? null
+        const same = agentLine.current && turn != null && agentLine.current.turn === turn
+        clearTimeout(finishTimer.current)
+        if (!same) finishAgentLine()
+        const text = same ? `${agentLine.current.text} ${message.text}` : message.text
+        agentLine.current = { turn, text }
+        dispatch({ type: 'utterance', speaker: 'agent', text, final: false })
+        playSay(message)
+      }
+      if (message.type === 'stop_speaking') {
+        stopSpeaking()
+        finishAgentLine()
+      }
+      if (message.type === 'status') {
+        setStatus(message.status)
+        // Map onto the screen's phases: read-back → "please check"; back to ordering → editable again.
+        if (message.status === 'awaiting_confirmation') dispatch({ type: 'confirm_request' })
+        if (message.status === 'ordering') dispatch({ type: 'edit_again' })
+      }
       if (message.type === 'transcript') {
+        finishAgentLine()
         dispatch({ type: 'utterance', speaker: 'customer', text: message.text, final: message.final })
         if (message.final) {
           const build = buildRef?.current
@@ -132,7 +181,7 @@ export const useLiveFeed = (dispatch, buildRef) => {
     }
 
     const connect = () => {
-      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`)
+      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws?bargein=${bargeIn ? 1 : 0}`)
       ws.binaryType = 'arraybuffer'
       ws.onopen = () => setConnected(true)
       ws.onclose = () => {
@@ -148,36 +197,37 @@ export const useLiveFeed = (dispatch, buildRef) => {
       closed = true
       clearTimeout(retry)
       socket.current?.close()
+      stopSpeaking()
+      if (voiceMicOn()) stopMic()
     }
-  }, [dispatch])
+  }, [dispatch, send, finishAgentLine])
 
+  // Mic button: 16 kHz PCM capture + noise gate + playback live in web/shared/voice.ts (same as /basic/).
+  // The click unlocks audio playback and starts the ~1.5s room calibration (keep quiet), then the
+  // server's opening greeting ({type:'hello'}).
   const toggleMic = useCallback(async () => {
-    if (recorder.current) {
-      recorder.current.stop()
-      recorder.current.stream.getTracks().forEach((track) => track.stop())
-      recorder.current = null
+    if (voiceMicOn()) {
+      stopMic()
       setMicOn(false)
       return
     }
+    unlockAudio()
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
-      const mimeType = ['audio/webm;codecs=opus', 'audio/webm'].find((type) => MediaRecorder.isTypeSupported(type))
-      const media = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
-      media.ondataavailable = async (event) => {
-        if (event.data.size && socket.current?.readyState === WebSocket.OPEN) socket.current.send(await event.data.arrayBuffer())
-      }
-      media.start(250)
-      recorder.current = media
+      await startMic()
+      send({ type: 'hello' })
       setMicOn(true)
     } catch (error) {
       dispatch({ type: 'notice', text: `Microphone unavailable: ${error.message}` })
     }
-  }, [dispatch])
+  }, [dispatch, send])
 
   const resetLive = useCallback(() => {
     previous.current = new Map()
+    agentLine.current = null
+    stopSpeaking()
+    setStatus('ordering')
     send({ type: 'reset' })
   }, [send])
 
-  return { connected, send, micOn, toggleMic, resetLive }
+  return { connected, send, micOn, voice, status, toggleMic, resetLive }
 }

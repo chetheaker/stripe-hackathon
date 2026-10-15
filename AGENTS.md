@@ -57,14 +57,36 @@ Optional side quest: best use of Cognee memory (e.g. a returning customer saying
 
 These are the proposal; keep this list in sync with what the code actually does, because it's what we show judges.
 
-- Only items and sizes in `menu.json` can be ordered. Anything else gets a polite "we don't do that" and a suggestion.
-- Prices always come from `menu.json` / Stripe, never from the LLM. No discounts, ever, unless a meal deal applies.
-- Required options must be chosen before checkout (wing sauce, ice cream flavour). Gluten-free base is small only.
-- Quantity cap per order (e.g. more than 10 pizzas needs staff approval), as a visible "needs approval" state.
-- Allergen questions are answered from `menu.json` only, always with the kitchen allergen notice.
-- The order is read back and confirmed before the QR code appears.
+These are what the code enforces now (server-side, whatever the AI says), unless marked "not built yet".
+
+- Only items and sizes in `menu.json` can be ordered. Anything else is never added; the kiosk says "we don't do that" and suggests one real menu item.
+- Out-of-stock items (listed in `data/out-of-stock.json`, currently Rocco's Nduja & Hot Honey) are never added; the kiosk says so and suggests something similar.
+- Every line needs the customer's own words as evidence; a line the AI can't quote from the transcript is dropped.
+- If a size isn't said, the kiosk asks ("Medium or large on the pepperoni?") but adds the default size meanwhile, marked "(default)", so the order never gets stuck.
+- Prices always come from `menu.json` / Stripe, never from the LLM. The AI is never allowed to say a price or total out loud; the server checks every spoken line and only the server reads out the total. No discounts.
+- At most one upsell per order, and only once there's a pizza in the order. It is only added if the customer says yes.
+- More than 10 of one item is held back for staff to confirm.
+- The order is read back by the server (items, sizes and the total from the menu) and the customer must say yes before the QR code appears. Changing anything sends it back to ordering.
+- Not built yet: required options (wing sauce, ice cream flavour), gluten-free small only, allergen answers.
 - Every change records the quote that caused it and the rule that allowed it. That record is the audit trail on screen.
 - Build your own is priced from the menu: a Margherita at that size (includes sauce and cheese), plus the menu's extra-topping price per topping (up to 8), plus stuffed crust or gluten-free base if chosen. Sauce and cheese swaps are free. Only the 14 listed toppings; anything else (anchovies, tuna…) gets a polite no (R1).
+- Room noise is not an order: filler ("uh", "hmm") and short, low-confidence fragments with no meaningful word are ignored server-side.
+
+## Kiosk ↔ server messages (WebSocket `/ws`)
+
+Full table in `README.md`. The voice ones Alex may want to render:
+
+- server → kiosk `{type:"say", text, audio_url, id, turn}`: the kiosk is talking, one message per sentence. Show `text` (in `/basic/` a "kiosk says" line added by `web/shared/voice.ts`; in `/?live` an agent caption via `{type:'utterance', speaker:'agent'}`; sentences with the same `turn` are appended); `voice.ts` queues and plays the audio.
+- server → kiosk `{type:"stop_speaking"}`: stop the audio now.
+- server → kiosk `{type:"status", status}`: `ordering`, `awaiting_confirmation` (order read back, waiting for "yes"), `awaiting_payment` (QR showing) or `paid`. In `/?live`, `awaiting_confirmation` → the screen's `confirming` phase and `ordering` → back to ordering; payment/paid come from the `checkout` / `paid` messages.
+- kiosk → server `{type:"speaking", on}`, `{type:"playback", id}`, `{type:"barge_in"}`, `{type:"hello"}`: sent by `voice.ts` / Start (audio state, latency logging, interruptions, opening greeting).
+- kiosk → server binary: 16 kHz mono linear16 PCM from `web/shared/voice.ts` (silence while below the noise gate). Both `/basic/` and `/?live` use this one module (no MediaRecorder/webm any more).
+- kiosk → server `{type:"done"}`: the Done button. First press reads the order back; pressing again while it's waiting for "yes" skips to the QR. `{type:"checkout_now"}` skips straight to the QR (testing).
+- Hands-free: the mic stays open after Start. At Start the kiosk listens to the room for 1.5s (orange dot) to set the noise gate; keep quiet then. Green dot = it hears speech, blue = kiosk talking, grey = below the gate.
+- `?gate=3` (default) is how far above the room level speech must be. Loud room and it's picking up chatter: try `?gate=4` or `5`. Quiet voice getting cut: try `?gate=2`.
+- Barge-in (talking over the kiosk) is OFF by default: the mic is ignored while the kiosk talks (+300ms), because false interruptions from room noise are worse. `?bargein=1` turns it on (needs ~400ms of speech to interrupt).
+
+Voice stack: Deepgram Flux (speech to text with built-in turn detection), Claude Haiku (cart + a separate short streaming reply), ElevenLabs `eleven_flash_v2_5` voice George (British, warm, mature), set by `ELEVENLABS_VOICE_ID` in `.env`. Each turn logs `[turn] ...` timings in the server console.
 
 ## Known gotchas
 
@@ -77,7 +99,7 @@ These are the proposal; keep this list in sync with what the code actually does,
 - **Run:** `npm run dev:web` and open http://localhost:5173. Che's original plain kiosk is still at http://localhost:5173/basic/.
 - **Layout (option A, "menu board that lights up"):** the whole menu is always on screen; items glow and a chip flies to the ticket when mentioned. The ticket on the right shows every line with the customer's quote and the rule ids that allowed it; removed lines stay struck through. The next course they haven't touched (sides, dips, drinks, desserts) is highlighted and offered as a nudge. "That's everything" plays a read-back, then the ticket flips to the QR code, and on payment pink floods the printer column from its keys with a big PAID, the total and order number, a soft chime and a "Next customer" button.
 - **Demo mode (default):** a scripted conversation in `web/src/demoScript.js`. Keys: → next step, A autoplay, R reset, P mark paid, H hide demo controls. Without the server the QR is a placeholder link.
-- **Live mode:** open `/?live` with Che's server running (`npm run dev`). The screen connects to `/ws`, diffs each `cart` snapshot into add / update / remove animations, shows `transcript` as captions, `notice` as toasts, and reacts to `checkout` and `paid`. Taps on the board send `{type:'text'}`; "Yes, that's right" sends `{type:'done'}`; the mic button streams audio.
+- **Live mode:** open `/?live` with Che's server running (`npm run dev`). The screen connects to `/ws`, diffs each `cart` snapshot into add / update / remove animations, shows `transcript` as captions, `notice` as toasts, and reacts to `checkout` and `paid`. Taps on the board send `{type:'text'}`; "That's everything" and "Yes, that's right" each send `{type:'done'}` (read-back, then QR). The "Start mic" button (bottom left) unlocks audio, calibrates the room for 1.5s (dot orange, "Hush…"; keep quiet), sends `hello`, then streams 16 kHz PCM via `web/shared/voice.ts`; dot blue = kiosk speaking, dim = below the gate. Kiosk replies (`say`) play aloud and show as "Rocco's" captions. `?gate=` and `?bargein=1` work here too.
 - **Order events:** the screen's internal event shapes are documented at the top of `web/src/order.js`. Sizes, extras, "no X" and sauces only show in live mode once the server sends them per cart line (e.g. `size`).
 - **Build your own (3D):** saying "can I make my own pizza?" (or tapping the "Build your own" card, or pressing B) takes over the screen in the riso brand (paper stock, blue and pink inks, Anton and Archivo). It uses a three.js scene: React Three Fiber, drei, and `@react-three/postprocessing` for ambient occlusion (N8AO) with neutral tone mapping. For realism, the crust texture is the char ring unwrapped from the generated menu photo (`output/menu-style-review/a-pepperoni-clean-overhead.png` → `web/src/build/assets/crust-strip.jpg`), and the pepperoni are 8 real slices cut from the same photo (`assets/pepperoni-atlas.png`). Sauce and melted cheese are per-pixel shaders (noise, blisters, browning, bump), the dough is a lumpy hand-stretched mesh, other slices are painted top-down cards with real thickness, and beef, chicken, corn and nduja are noise-displaced chunks. The flow: a dough ball slaps flat, sauce spreads in a spiral, grated mozzarella rains on, toppings drop in and settle, then "bake it" browns the crust, melts and blisters the cheese, cups the pepperoni, and adds embers and steam. It lands on the ticket as "Large Build Your Own" with every step's quote and rule as its audit trail. Code is in `web/src/build/`: `buildModel.js` (choices, pricing, rules, speech parser), `PizzaScene.jsx` (3D), `toppings3d.js`, `textures.js`, `glsl.js`, `BuildMode.jsx` + `build.css` (overlay UI), `sound.js`. Rehearse with `/?script=build` (→ to step, A autoplay). Add `&debug=hold` to keep the baked pizza on screen, or `&debug=noao` to turn off ambient occlusion on a slow machine. In live mode the screen parses final transcripts itself, so it works without server changes, **but Che's server doesn't know about the custom pizza yet**, so a live Checkout Session won't include it until the server accepts a custom line.
 - **House rules** (R1–R7) live in `web/src/policy.js` and must match the Guardrails list above.
@@ -101,10 +123,11 @@ These are the proposal; keep this list in sync with what the code actually does,
 - [x] Repo created (Che)
 - [x] Stripe sandbox set up, menu seeded, test checkout priced correctly (£52.45 sample order)
 - [ ] Order JSON shape agreed
-- [ ] Transcription → order changes (Che)
+- [x] Transcription → order changes (Che)
+- [x] Kiosk talks back (ElevenLabs voice, ~1s to first audio): asks sizes, says not on menu / out of stock, one upsell, goes straight to payment on "that's all" (Che)
 - [x] Build-your-own 3D mode, demo mode working (`/?script=build`); not yet in the live server cart
-- [x] Order screen + QR + paid state (Alex), demo mode working; live mode wired to Che's `/ws` but not yet tested against the running server
-- [ ] Checkout Session creation from an order
+- [x] Order screen + QR + paid state (Alex), demo mode working; live mode wired to Che's `/ws` with the shared PCM voice pipeline
+- [x] Checkout Session creation from an order
 - [x] Guardrails and audit trail visible on screen (demo mode)
 - [ ] Repo made public
 - [ ] Demo video recorded and submitted by 21:00

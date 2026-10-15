@@ -22,15 +22,18 @@ function CaptionLine({ line, live }) {
   )
 }
 
+// Live mode: voice.ts state → button label. Calibrating = the ~1.5s room-noise check right after Start.
+const MIC_LABEL = { calibrating: 'Hush…', speaking: 'Speaking', open: 'Listening', idle: 'Listening' }
+
 export default function Captions({ captions, live }) {
   const lines = [...captions.said.slice(captions.live ? -1 : -2)]
   return (
     <footer className="captions">
       <div className="listening" data-on={live.on}>
         {live.button ? (
-          <button className="mic-button" onClick={live.button} data-on={live.on}>
+          <button className="mic-button" onClick={live.button} data-on={live.on} data-state={live.state}>
             <span className="listening-dot" />
-            {live.on ? 'Listening' : 'Start mic'}
+            {live.on ? MIC_LABEL[live.state] ?? 'Listening' : 'Start mic'}
           </button>
         ) : (
           <>

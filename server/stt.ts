@@ -1,12 +1,21 @@
-// Deepgram live STT over a raw WebSocket (simpler + more stable than the SDK's churny API).
-// One instance per kiosk connection. Browser sends MediaRecorder webm/opus chunks; Deepgram
-// auto-detects containerised audio, so no `encoding` param is sent.
+// Deepgram Flux live STT (flux-general-en, /v2/listen) over a raw WebSocket. Flux is built for voice agents: it does
+// turn detection itself and emits TurnInfo events (StartOfTurn, Update, EagerEndOfTurn, TurnResumed, EndOfTurn).
+// The browser sends 16 kHz mono linear16 PCM (gated: silence below the noise gate), so the stream is continuous.
 import WebSocket from "ws";
 import { KEYTERMS } from "./menu.js";
 
-type OnTranscript = (text: string, final: boolean) => void;
-
-const EBML_MAGIC = Buffer.from([0x1a, 0x45, 0xdf, 0xa3]); // start of a new webm stream
+export interface Word { word: string; confidence: number }
+export interface SttEvents {
+  /** Live (interim) transcript of the current turn. */
+  update(text: string): void;
+  /** Flux thinks the turn is probably over: start speculative work. */
+  eagerEnd(text: string, words: Word[]): void;
+  /** The customer carried on after an EagerEndOfTurn: cancel speculative work. */
+  resumed(): void;
+  /** The turn is over. */
+  end(text: string, words: Word[]): void;
+  error(msg: string): void;
+}
 
 export function hasDeepgram() {
   return !!process.env.DEEPGRAM_API_KEY;
@@ -15,61 +24,60 @@ export function hasDeepgram() {
 export class Stt {
   private dg: WebSocket | null = null;
   private pending: Buffer[] = [];
-  private header: Buffer | null = null; // first chunk of the current webm stream, replayed on reconnect
+  private idle: NodeJS.Timeout | undefined;
 
-  constructor(private onTranscript: OnTranscript, private onError: (msg: string) => void) {}
+  constructor(private ev: SttEvents) {}
 
-  /** Forward one browser audio chunk. A chunk starting with the EBML header means a new recording. */
+  /** Forward one chunk of 16 kHz linear16 PCM. Opens the Deepgram stream lazily. */
   push(chunk: Buffer) {
     if (!hasDeepgram()) return;
-    if (chunk.subarray(0, 4).equals(EBML_MAGIC)) {
-      this.close();
-      this.header = chunk;
-    }
-    if (!this.dg) {
-      if (!this.header) return; // mid-stream chunk with no header — undecodable
-      this.open();
-      if (chunk !== this.header) this.pending.push(this.header);
-    }
+    if (!this.dg) this.open();
     if (this.dg!.readyState === WebSocket.OPEN) this.dg!.send(chunk);
-    else this.pending.push(chunk);
+    else if (this.pending.length < 200) this.pending.push(chunk);
+    // Mic stopped (no audio for a while): close so we don't hold a Flux stream open.
+    clearTimeout(this.idle);
+    this.idle = setTimeout(() => this.close(), 10_000);
   }
 
   private open() {
     const params = new URLSearchParams({
-      model: "nova-3",
-      interim_results: "true",
-      endpointing: "300",
-      smart_format: "true",
+      model: "flux-general-en",
+      encoding: "linear16",
+      sample_rate: "16000",
+      eot_threshold: process.env.FLUX_EOT_THRESHOLD || "0.7",
+      eager_eot_threshold: process.env.FLUX_EAGER_EOT_THRESHOLD || "0.5",
+      eot_timeout_ms: "3000",
     });
-    for (const k of KEYTERMS) params.append("keyterm", k);
-    const dg = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, {
+    for (const k of KEYTERMS.slice(0, 100)) params.append("keyterm", k); // Flux limit: 100 keyterms
+    const dg = new WebSocket(`wss://api.deepgram.com/v2/listen?${params}`, {
       headers: { Authorization: `Token ${process.env.DEEPGRAM_API_KEY}` },
     });
     this.dg = dg;
-    let keepAlive: NodeJS.Timeout | undefined;
     dg.on("open", () => {
       for (const c of this.pending) dg.send(c);
       this.pending = [];
-      keepAlive = setInterval(() => dg.readyState === WebSocket.OPEN && dg.send(JSON.stringify({ type: "KeepAlive" })), 5000);
     });
     dg.on("message", (data) => {
-      try {
-        const msg = JSON.parse(data.toString());
-        if (msg.type !== "Results") return;
-        const text: string = msg.channel?.alternatives?.[0]?.transcript ?? "";
-        if (text.trim()) this.onTranscript(text, !!msg.is_final);
-      } catch { /* ignore non-JSON */ }
+      let msg: { type?: string; event?: string; transcript?: string; words?: Word[]; description?: string };
+      try { msg = JSON.parse(data.toString()); } catch { return; }
+      if (msg.type === "Error") return this.ev.error(`Deepgram: ${msg.description ?? "error"}`);
+      if (msg.type !== "TurnInfo") return;
+      const text = (msg.transcript ?? "").trim();
+      const words = msg.words ?? [];
+      switch (msg.event) {
+        case "Update": case "StartOfTurn": if (text) this.ev.update(text); break;
+        case "EagerEndOfTurn": this.ev.eagerEnd(text, words); break;
+        case "TurnResumed": this.ev.resumed(); break;
+        case "EndOfTurn": this.ev.end(text, words); break;
+      }
     });
-    dg.on("unexpected-response", (_req, res) => this.onError(`Deepgram rejected connection (HTTP ${res.statusCode})`));
-    dg.on("error", (e) => this.onError(`Deepgram error: ${e.message}`));
-    dg.on("close", () => {
-      if (this.dg === dg) this.dg = null;
-      clearInterval(keepAlive);
-    });
+    dg.on("unexpected-response", (_req, res) => this.ev.error(`Deepgram rejected connection (HTTP ${res.statusCode})`));
+    dg.on("error", (e) => this.ev.error(`Deepgram error: ${e.message}`));
+    dg.on("close", () => { if (this.dg === dg) this.dg = null; });
   }
 
   close() {
+    clearTimeout(this.idle);
     const dg = this.dg;
     this.dg = null;
     this.pending = [];
