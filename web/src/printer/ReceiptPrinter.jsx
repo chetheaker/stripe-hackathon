@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
 import { formatPrice, liveLines, orderTotal } from '../menu'
-import { LEAD, ROW_HEIGHTS, offsetOf, paperLength, receiptBlocks } from './receipt'
-import { printStep, reverseStep } from './sound'
+import { LEAD, offsetOf, paperLength, receiptBlocks } from './receipt'
+import { paidChime, printStep, reverseStep } from './sound'
 import './printer.css'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -169,13 +169,20 @@ export default function ReceiptPrinter({ order, actions, sound = true }) {
   const room = windowHeight - 40
   const zoom = fed > room ? Math.max(0.55, room / fed) : 1
 
-  let stampTop = null
-  const footerIndex = printed.findIndex((block) => block.key === 'footer')
-  if (order.phase === 'paid' && footerIndex !== -1) {
-    const footer = printed[footerIndex]
-    const qrIndex = footer.rows.findIndex((row) => row.kind === 'qr')
-    stampTop = offsetOf(printed, footerIndex) + footer.rows.slice(0, qrIndex).reduce((sum, row) => sum + ROW_HEIGHTS[row.kind], 0) + 52
-  }
+  // Paid: pink floods the column from the printer's keys, then the confirmation rises in.
+  const paid = order.phase === 'paid'
+  const controlsRef = useRef(null)
+  const [bloom, setBloom] = useState(null)
+  useLayoutEffect(() => {
+    if (!paid || !columnRef.current) return setBloom(null)
+    const column = columnRef.current.getBoundingClientRect()
+    const keys = controlsRef.current?.getBoundingClientRect()
+    const x = keys ? keys.left + keys.width / 2 - column.left : column.width / 2
+    const y = keys ? keys.top + keys.height / 2 - column.top : column.height * 0.8
+    const r = Math.hypot(Math.max(x, column.width - x), Math.max(y, column.height - y))
+    setBloom({ '--bx': `${x}px`, '--by': `${y}px`, '--br': `${Math.ceil(r)}px` })
+    if (sound) paidChime()
+  }, [paid])
 
   return (
     <aside className="printer-column" data-phase={order.phase} ref={columnRef}>
@@ -190,7 +197,7 @@ export default function ReceiptPrinter({ order, actions, sound = true }) {
               <div className="lcd-label">{LCD_LABELS[order.phase]}</div>
               <div className="lcd-total">{formatPrice(total)}</div>
             </div>
-            <div className="printer-controls">
+            <div className="printer-controls" ref={controlsRef}>
               {order.phase === 'ordering' && (
                 <button className="key key-primary" disabled={!hasLines} onClick={actions.finish}>That's everything</button>
               )}
@@ -227,21 +234,28 @@ export default function ReceiptPrinter({ order, actions, sound = true }) {
                 </div>
               ))}
             </div>
-            {stampTop !== null && (
-              <div className="paid-stamp" style={{ top: stampTop }}>
-                <svg aria-hidden="true" width="0" height="0">
-                  <filter id="stampInk">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" />
-                  </filter>
-                </svg>
-                PAID
-              </div>
-            )}
           </div>
           <div className="paper-shade" style={{ height: Math.min(14, fed) }} />
         </div>
       </div>
+
+      {paid && bloom && (
+        <div className="paid-bloom" style={bloom} role="status">
+          <div className="paid-content">
+            <div className="paid-disc">
+              <svg width="62" height="62" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path className="paid-check" d="M4 12.5l5 5L20 6.5" />
+              </svg>
+            </div>
+            <div className="paid-word">Paid</div>
+            <div className="paid-amount">
+              {formatPrice(orderTotal(order.lines))} · ORDER #{String(order.orderNo).padStart(4, '0')}
+            </div>
+            <div className="paid-line">Thank you! Your order's gone to the kitchen.</div>
+          </div>
+          <button className="paid-next" onClick={actions.reset}>Next customer</button>
+        </div>
+      )}
     </aside>
   )
 }
