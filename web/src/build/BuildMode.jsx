@@ -8,6 +8,7 @@ import {
   BASE_ITEM, CHEESES, CHEESES_BY_ID, CRUSTS, CRUSTS_BY_ID, MAX_TOPPINGS, SAUCES, SAUCES_BY_ID, SIZES, SIZES_BY_ID, STEPS, TOPPINGS,
   buildPricing, currentStep,
 } from './buildModel'
+import './build.css'
 
 const PizzaScene = lazy(() => import('./PizzaScene'))
 
@@ -166,12 +167,15 @@ function Dock({ build, send, bake }) {
 
 function Caption({ captions }) {
   const line = captions.live ?? captions.said.at(-1)
-  if (!line) return null
   return (
-    <div className="build-caption" data-speaker={line.speaker} data-live={Boolean(captions.live)}>
-      <span className="caption-who">{line.speaker === 'customer' ? 'You' : 'Rocco\'s'}</span>
-      <span>{line.text}</span>
-    </div>
+    <footer className="build-caption" data-speaker={line?.speaker} data-live={Boolean(captions.live)}>
+      {line && (
+        <>
+          <span className="build-caption-who">{line.speaker === 'customer' ? 'You' : 'Rocco\'s'}</span>
+          <span className="build-caption-text">{line.text}</span>
+        </>
+      )}
+    </footer>
   )
 }
 
@@ -226,7 +230,6 @@ export default function BuildMode({ build, captions, dispatch }) {
       animate={{ clipPath: 'circle(150% at 50% 55%)', transition: { duration: 0.7, ease: [0.77, 0, 0.175, 1] } }}
       exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.35, ease: EASE_OUT } }}
     >
-      <div className="build-glow" />
       <div className="build-canvas">
         <Suspense fallback={null}>
           <PizzaScene build={build} onBaked={() => setBaked(true)} />
@@ -244,6 +247,7 @@ export default function BuildMode({ build, captions, dispatch }) {
       <Steps build={build} />
       <Bill build={build} />
       <ChangePop change={pop} />
+      <div className="build-heat" />
 
       {build.stage === 'building' ? (
         <Dock build={build} send={send} bake={() => dispatch({ type: 'build_bake', quote: null })} />
@@ -258,11 +262,11 @@ export default function BuildMode({ build, captions, dispatch }) {
               exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
               transition={{ duration: 0.3, ease: EASE_OUT }}
             >
-              {baked ? 'Fresh out of the oven' : 'Stone-baking at 400°'}
+              {baked ? 'Fresh out the oven' : 'In the oven'}
             </motion.h2>
           </AnimatePresence>
           <div className="build-oven-bar"><span /></div>
-          <p className="build-hint">{baked ? 'Adding it to your order' : 'Every pound on this pizza is on the ticket, with what you said'}</p>
+          <p className="build-hint">{baked ? 'Adding it to your order' : 'Stone-baked at 400°. Every pound of it goes on the receipt with what you said.'}</p>
         </div>
       )}
 

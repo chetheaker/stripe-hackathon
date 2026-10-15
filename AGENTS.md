@@ -64,6 +64,7 @@ These are the proposal; keep this list in sync with what the code actually does,
 - Allergen questions are answered from `menu.json` only, always with the kitchen allergen notice.
 - The order is read back and confirmed before the QR code appears.
 - Every change records the quote that caused it and the rule that allowed it. That record is the audit trail on screen.
+- Build your own is priced from the menu: a Margherita at that size (includes sauce and cheese), plus the menu's extra-topping price per topping (up to 8), plus stuffed crust or gluten-free base if chosen. Sauce and cheese swaps are free. Only the 14 listed toppings; anything else (anchovies, tuna…) gets a polite no (R1).
 
 ## Known gotchas
 
@@ -78,10 +79,13 @@ These are the proposal; keep this list in sync with what the code actually does,
 - **Demo mode (default):** a scripted conversation in `web/src/demoScript.js`. Keys: → next step, A autoplay, R reset, P mark paid, H hide demo controls. Without the server the QR is a placeholder link.
 - **Live mode:** open `/?live` with Che's server running (`npm run dev`). The screen connects to `/ws`, diffs each `cart` snapshot into add / update / remove animations, shows `transcript` as captions, `notice` as toasts, and reacts to `checkout` and `paid`. Taps on the board send `{type:'text'}`; "Yes, that's right" sends `{type:'done'}`; the mic button streams audio.
 - **Order events:** the screen's internal event shapes are documented at the top of `web/src/order.js`. Sizes, extras, "no X" and sauces only show in live mode once the server sends them per cart line (e.g. `size`).
+- **Build your own (3D):** saying "can I make my own pizza?" (or tapping the dark "Build your own" card, or pressing B) takes over the screen with a three.js scene (React Three Fiber + drei, all procedural, no model files, no network). The customer talks it into existence: size and crust (the dough ball slaps flat with a flour puff), sauce (spreads in a spiral), cheese (shreds rain down and melt in), toppings (each flies on in an arc and lands with a squash; removed ones fly off), then "bake it" (oven glow, browning crust, embers, steam, ding). It then lands on the ticket as "Large Build Your Own", with every step's quote and rule as its audit trail. Code is in `web/src/build/`: `buildModel.js` (choices, pricing, rules, speech parser), `PizzaScene.jsx` (3D), `BuildMode.jsx` (overlay UI), `sound.js` (synthesised sounds). Rehearse with `/?script=build` (→ to step, A autoplay). In live mode the screen parses final transcripts itself, so it works without server changes, **but Che's server doesn't know about the custom pizza yet**, so a live Checkout Session won't include it until the server accepts a custom line.
 - **House rules** (R1–R7) live in `web/src/policy.js` and must match the Guardrails list above.
 - **Menu photography:** four generated style-review samples and their prompts are saved in `output/menu-style-review/` (Pepperoni in clean overhead, warm counter and dark studio styles, plus BBQ wings in the clean style). Awaiting Alex's style choice before generating the full menu; samples are not yet wired into the screen.
 
 ## Still to decide
+
+- How the server should take a build-your-own pizza into the live cart and Stripe Checkout (e.g. the screen sends the finished pizza as a line with `price_data` built from menu prices), and pause the cart agent while build mode is open so "pepperoni" isn't also added as a Pepperoni pizza.
 
 - Whether Che's cart lines gain `size`, `extras`, `without` and `options` so live mode shows the same detail as the demo.
 - Whether to try the Cognee side quest.
@@ -98,6 +102,7 @@ These are the proposal; keep this list in sync with what the code actually does,
 - [x] Stripe sandbox set up, menu seeded, test checkout priced correctly (£52.45 sample order)
 - [ ] Order JSON shape agreed
 - [ ] Transcription → order changes (Che)
+- [x] Build-your-own 3D mode, demo mode working (`/?script=build`); not yet in the live server cart
 - [x] Order screen + QR + paid state (Alex), demo mode working; live mode wired to Che's `/ws` but not yet tested against the running server
 - [ ] Checkout Session creation from an order
 - [x] Guardrails and audit trail visible on screen (demo mode)

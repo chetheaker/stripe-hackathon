@@ -36,3 +36,27 @@ const burst = (frequency, duration, gain) => {
 
 export const printStep = () => burst(2600 + Math.random() * 500, 0.022, 0.05)
 export const reverseStep = () => burst(1500 + Math.random() * 200, 0.018, 0.03)
+
+// Paid: a soft rising chime, three sine notes that ring out.
+const note = (frequency, delay, duration, gain) => {
+  const audio = setup()
+  if (!audio) return
+  if (audio.state === 'suspended') audio.resume()
+  const osc = audio.createOscillator()
+  osc.type = 'sine'
+  osc.frequency.value = frequency
+  const volume = audio.createGain()
+  const start = audio.currentTime + delay
+  volume.gain.setValueAtTime(0.0001, start)
+  volume.gain.exponentialRampToValueAtTime(gain, start + 0.015)
+  volume.gain.exponentialRampToValueAtTime(0.0001, start + duration)
+  osc.connect(volume).connect(audio.destination)
+  osc.start(start)
+  osc.stop(start + duration)
+}
+
+export const paidChime = () => {
+  note(1046.5, 0, 0.9, 0.06)
+  note(1318.5, 0.09, 0.9, 0.05)
+  note(1568, 0.18, 1.3, 0.05)
+}

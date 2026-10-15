@@ -1,6 +1,11 @@
 import * as THREE from 'three'
 
-// Seeded random so the pizza looks the same every time it's built.
+/*
+  Procedural textures, painted once on canvases. Slices (mushroom, olive,
+  jalapeño…) are drawn top-down with alpha, four variants side by side, and
+  rendered as thin cut-out cards so their edges are irregular like real food.
+*/
+
 export const rng = (seed) => {
   let value = seed % 2147483647
   if (value <= 0) value += 2147483646
@@ -10,173 +15,502 @@ export const rng = (seed) => {
   }
 }
 
-const canvasTexture = (size, draw, { srgb = true } = {}) => {
+// Value noise with a fixed lattice, smooth and cheap.
+const LATTICE = (() => {
+  const random = rng(1234)
+  return Float32Array.from({ length: 256 * 256 }, () => random())
+})()
+const lattice = (x, y) => LATTICE[((y & 255) << 8) | (x & 255)]
+const fade = (t) => t * t * (3 - 2 * t)
+export const noise2 = (x, y) => {
+  const xi = Math.floor(x)
+  const yi = Math.floor(y)
+  const xf = fade(x - xi)
+  const yf = fade(y - yi)
+  const a = lattice(xi, yi)
+  const b = lattice(xi + 1, yi)
+  const c = lattice(xi, yi + 1)
+  const d = lattice(xi + 1, yi + 1)
+  const top = a + (b - a) * xf
+  return top + ((c + (d - c) * xf) - top) * yf
+}
+export const fbm2 = (x, y, octaves = 4) => {
+  let sum = 0
+  let amp = 0.5
+  for (let i = 0; i < octaves; i++) {
+    sum += amp * (noise2(x, y) * 2 - 1)
+    x = x * 2.03 + 17.1
+    y = y * 2.03 + 3.7
+    amp *= 0.5
+  }
+  return sum
+}
+
+const makeCanvas = (width, height = width) => {
   const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
-  draw(canvas.getContext('2d'), size)
+  canvas.width = width
+  canvas.height = height
+  return canvas
+}
+
+const toTexture = (canvas, { srgb = true } = {}) => {
   const texture = new THREE.CanvasTexture(canvas)
   if (srgb) texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = 8
   return texture
 }
 
-const blob = (ctx, x, y, radius, color, alpha = 1) => {
-  const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius)
-  gradient.addColorStop(0, color.replace('ALPHA', alpha))
-  gradient.addColorStop(1, color.replace('ALPHA', 0))
-  ctx.fillStyle = gradient
-  ctx.beginPath()
-  ctx.arc(x, y, radius, 0, Math.PI * 2)
-  ctx.fill()
+// Multiplies colour by fbm noise wherever something is drawn, for organic variation.
+const grain = (ctx, { amount = 0.18, scale = 0.04, seed = 0, octaves = 4 } = {}) => {
+  const { width, height } = ctx.canvas
+  const image = ctx.getImageData(0, 0, width, height)
+  const data = image.data
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4
+      if (data[i + 3] === 0) continue
+      const n = 1 + amount * fbm2(x * scale + seed, y * scale + seed * 1.7, octaves)
+      data[i] = Math.min(255, data[i] * n)
+      data[i + 1] = Math.min(255, data[i + 1] * n)
+      data[i + 2] = Math.min(255, data[i + 2] * n)
+    }
+  }
+  ctx.putImageData(image, 0, 0)
 }
 
-/*
-  Dough is a lathe, so the texture's v runs along the profile: bottom (0),
-  around the rim (middle), to the centre top (1). Rows are painted by v so
-  the rim browns more than the middle when baked.
-*/
-export const DOUGH_V = { rimStart: 0.14, rimEnd: 0.83 }
-
-const mix = (a, b, t) => a.map((channel, index) => Math.round(channel + (b[index] - channel) * t))
-const rgb = (color) => `rgb(${color.join(',')})`
-
-export const doughTextures = () => {
-  const paint = (baked) => canvasTexture(512, (ctx, size) => {
-    const random = rng(baked ? 11 : 7)
-    for (let y = 0; y < size; y++) {
-      const v = 1 - y / size
-      let color
-      if (!baked) color = [232, 196, 146]
-      else if (v < DOUGH_V.rimStart) color = [196, 140, 80]
-      else if (v > DOUGH_V.rimEnd) color = [226, 180, 118]
-      else {
-        const rim = Math.sin(((v - DOUGH_V.rimStart) / (DOUGH_V.rimEnd - DOUGH_V.rimStart)) * Math.PI)
-        color = mix([214, 160, 92], [176, 104, 42], rim)
-      }
-      ctx.fillStyle = rgb(color)
-      ctx.fillRect(0, y, size, 1)
-    }
-    // Pores and flour.
-    for (let i = 0; i < 2600; i++) {
-      const x = random() * size
-      const y = random() * size
-      ctx.fillStyle = random() > 0.5 ? 'rgba(255,250,236,0.35)' : 'rgba(120,80,40,0.12)'
-      ctx.fillRect(x, y, 1 + random() * 2, 1 + random() * 2)
-    }
-    if (baked) {
-      // Leopard spots on the rim.
-      for (let i = 0; i < 420; i++) {
-        const v = DOUGH_V.rimStart + 0.08 + random() * (DOUGH_V.rimEnd - DOUGH_V.rimStart - 0.16)
-        const radius = 2 + random() * 7
-        blob(ctx, random() * size, (1 - v) * size, radius, 'rgba(58,30,12,ALPHA)', 0.35 + random() * 0.5)
-      }
-    }
-  })
-  const raw = paint(false)
-  const baked = paint(true)
-  for (const texture of [raw, baked]) texture.wrapS = THREE.RepeatWrapping
-  return { raw, baked }
+const radial = (ctx, x, y, r0, r1, stops) => {
+  const gradient = ctx.createRadialGradient(x, y, r0, x, y, r1)
+  stops.forEach(([offset, color]) => gradient.addColorStop(offset, color))
+  return gradient
 }
 
-// Sauce is tinted by material colour, so its texture is grey-scale.
-export const sauceTexture = () => canvasTexture(512, (ctx, size) => {
-  const random = rng(23)
-  ctx.fillStyle = '#fff'
-  ctx.fillRect(0, 0, size, size)
-  for (let i = 0; i < 90; i++) {
-    blob(ctx, random() * size, random() * size, 20 + random() * 60, random() > 0.5 ? 'rgba(170,170,170,ALPHA)' : 'rgba(255,255,255,ALPHA)', 0.35)
-  }
-  for (let i = 0; i < 260; i++) {
-    ctx.fillStyle = `rgba(60,60,60,${0.25 + random() * 0.4})`
-    ctx.fillRect(random() * size, random() * size, 2 + random() * 3, 1 + random() * 2)
-  }
-  // Darker where it thins out at the edge.
-  const edge = ctx.createRadialGradient(size / 2, size / 2, size * 0.36, size / 2, size / 2, size / 2)
-  edge.addColorStop(0, 'rgba(0,0,0,0)')
-  edge.addColorStop(1, 'rgba(0,0,0,0.35)')
-  ctx.fillStyle = edge
-  ctx.fillRect(0, 0, size, size)
-})
-
-/*
-  Cheese is patchy blobs. Coverage lives in its own grey-scale texture (the
-  layer "melts in" by lowering a threshold on it); colour textures are opaque
-  so transparent pixels never darken the cheese.
-*/
-export const cheeseTextures = () => {
-  const blobs = []
-  const random = rng(41)
-  for (let i = 0; i < 340; i++) {
-    const angle = random() * Math.PI * 2
-    const distance = Math.sqrt(random()) * 0.47
-    blobs.push({ x: 0.5 + Math.cos(angle) * distance, y: 0.5 + Math.sin(angle) * distance, radius: (26 + random() * 46) / 1024, alpha: 0.55 + random() * 0.45, spot: random() > 0.55, dx: random() - 0.5, dy: random() - 0.5 })
-  }
-  const coverage = canvasTexture(1024, (ctx, size) => {
-    ctx.fillStyle = '#000'
-    ctx.fillRect(0, 0, size, size)
-    ctx.globalCompositeOperation = 'lighter'
-    for (const b of blobs) blob(ctx, b.x * size, b.y * size, b.radius * size, 'rgba(255,255,255,ALPHA)', b.alpha * 0.8)
-  }, { srgb: false })
-  const paint = (baked) => canvasTexture(1024, (ctx, size) => {
-    ctx.fillStyle = baked ? '#f2cf7c' : '#fffaf0'
-    ctx.fillRect(0, 0, size, size)
-    for (const b of blobs) {
-      blob(ctx, b.x * size, b.y * size, b.radius * size, baked ? 'rgba(250,224,150,ALPHA)' : 'rgba(255,255,255,ALPHA)', 0.6)
-      if (baked && b.spot) blob(ctx, (b.x + b.dx * b.radius) * size, (b.y + b.dy * b.radius) * size, b.radius * size * 0.32, 'rgba(176,102,36,ALPHA)', 0.6)
-    }
-  })
-  return { raw: paint(false), baked: paint(true), coverage }
-}
-
-export const woodTexture = () => canvasTexture(1024, (ctx, size) => {
-  const random = rng(5)
-  ctx.fillStyle = '#b07a46'
-  ctx.fillRect(0, 0, size, size)
-  for (let i = 0; i < 220; i++) {
-    const y = random() * size
-    const amplitude = 2 + random() * 8
-    const frequency = 0.004 + random() * 0.01
-    const phase = random() * 10
-    ctx.strokeStyle = random() > 0.5 ? `rgba(90,52,22,${0.08 + random() * 0.18})` : `rgba(230,180,120,${0.06 + random() * 0.12})`
-    ctx.lineWidth = 0.6 + random() * 2.4
+// Paints `count` variants into one strip atlas, each cell `cell` px square.
+const atlas = (count, cell, paint) => {
+  const canvas = makeCanvas(cell * count, cell)
+  const ctx = canvas.getContext('2d')
+  for (let i = 0; i < count; i++) {
+    ctx.save()
+    ctx.translate(i * cell, 0)
     ctx.beginPath()
-    for (let x = 0; x <= size; x += 8) {
-      const offset = Math.sin(x * frequency + phase) * amplitude
-      if (x === 0) ctx.moveTo(x, y + offset)
-      else ctx.lineTo(x, y + offset)
-    }
+    ctx.rect(0, 0, cell, cell)
+    ctx.clip()
+    paint(ctx, cell, rng(101 + i * 37), i)
+    ctx.restore()
+  }
+  grain(ctx, { amount: 0.16, scale: 0.05, seed: count })
+  return toTexture(canvas)
+}
+
+const wobblyCircle = (ctx, cx, cy, r, random, wobble = 0.04, points = 48) => {
+  const phase = random() * 10
+  ctx.beginPath()
+  for (let i = 0; i <= points; i++) {
+    const a = (i / points) * Math.PI * 2
+    const rr = r * (1 + wobble * Math.sin(a * 3 + phase) + wobble * 0.6 * Math.sin(a * 7 + phase * 2))
+    const x = cx + Math.cos(a) * rr
+    const y = cy + Math.sin(a) * rr
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+}
+
+/* ---------- Slices ---------- */
+
+export const mushroomAtlas = () => atlas(4, 256, (ctx, s, random) => {
+  const capW = s * (0.4 + random() * 0.05)
+  const capH = s * (0.3 + random() * 0.06)
+  const stemW = s * (0.12 + random() * 0.05)
+  const stemH = s * (0.26 + random() * 0.08)
+  const cx = s / 2
+  const capY = s * 0.52
+  const path = new Path2D()
+  path.moveTo(cx - stemW, capY)
+  path.bezierCurveTo(cx - capW * 1.05, capY + s * 0.02, cx - capW * 1.1, capY - capH * 1.1, cx, capY - capH)
+  path.bezierCurveTo(cx + capW * 1.1, capY - capH * 1.1, cx + capW * 1.05, capY + s * 0.02, cx + stemW, capY)
+  path.bezierCurveTo(cx + stemW * 0.9, capY + stemH * 0.5, cx + stemW * 1.25, capY + stemH, cx + stemW * 1.15, capY + stemH)
+  path.lineTo(cx - stemW * 1.15, capY + stemH)
+  path.bezierCurveTo(cx - stemW * 1.25, capY + stemH, cx - stemW * 0.9, capY + stemH * 0.5, cx - stemW, capY)
+  path.closePath()
+  ctx.fillStyle = '#efe4cc'
+  ctx.fill(path)
+  ctx.save()
+  ctx.clip(path)
+  // Gills: a darker crescent under the cap with fine lines.
+  ctx.fillStyle = 'rgba(160, 128, 92, 0.55)'
+  ctx.beginPath()
+  ctx.ellipse(cx, capY - s * 0.01, capW * 0.92, s * 0.06, 0, 0, Math.PI)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(110, 84, 58, 0.35)'
+  ctx.lineWidth = 1
+  for (let i = 0; i < 40; i++) {
+    const x = cx - capW * 0.9 + (i / 40) * capW * 1.8
+    ctx.beginPath()
+    ctx.moveTo(x, capY - s * 0.005)
+    ctx.lineTo(x + (x - cx) * 0.08, capY + s * 0.045)
     ctx.stroke()
   }
-  // Knife marks and flour.
-  for (let i = 0; i < 40; i++) {
-    ctx.strokeStyle = 'rgba(70,40,18,0.12)'
-    ctx.lineWidth = 1
+  // Brown skin round the cap edge.
+  ctx.lineWidth = s * 0.035
+  ctx.strokeStyle = '#8a6440'
+  ctx.stroke(path)
+  ctx.lineWidth = s * 0.07
+  ctx.strokeStyle = 'rgba(150, 112, 74, 0.35)'
+  ctx.stroke(path)
+  // Fibres down the stem.
+  ctx.strokeStyle = 'rgba(170, 140, 104, 0.25)'
+  for (let i = 0; i < 10; i++) {
+    const x = cx - stemW * 0.8 + (i / 10) * stemW * 1.6
+    ctx.lineWidth = 1 + random()
+    ctx.beginPath()
+    ctx.moveTo(x, capY + s * 0.04)
+    ctx.lineTo(x + (random() - 0.5) * 4, capY + stemH)
+    ctx.stroke()
+  }
+  ctx.restore()
+})
+
+export const oliveAtlas = () => atlas(4, 128, (ctx, s, random) => {
+  const cx = s / 2
+  const r = s * (0.38 + random() * 0.05)
+  wobblyCircle(ctx, cx, cx, r, random, 0.05)
+  ctx.fillStyle = '#211a1f'
+  ctx.fill()
+  ctx.lineWidth = s * 0.05
+  ctx.strokeStyle = '#3c2d36'
+  ctx.stroke()
+  // The cut face is a touch lighter and purple.
+  ctx.fillStyle = radial(ctx, cx, cx, r * 0.35, r, [[0, 'rgba(72, 48, 64, 0.0)'], [0.6, 'rgba(72, 48, 64, 0.6)'], [1, 'rgba(30, 22, 28, 0)']])
+  ctx.beginPath()
+  ctx.arc(cx, cx, r, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.globalCompositeOperation = 'destination-out'
+  wobblyCircle(ctx, cx + (random() - 0.5) * 4, cx + (random() - 0.5) * 4, r * (0.38 + random() * 0.06), random, 0.06)
+  ctx.fill()
+  ctx.globalCompositeOperation = 'source-over'
+})
+
+export const jalapenoAtlas = () => atlas(4, 192, (ctx, s, random) => {
+  const cx = s / 2
+  const r = s * (0.4 + random() * 0.04)
+  wobblyCircle(ctx, cx, cx, r, random, 0.06)
+  ctx.fillStyle = '#2f5f1a'
+  ctx.fill()
+  wobblyCircle(ctx, cx, cx, r * 0.88, random, 0.05)
+  ctx.fillStyle = radial(ctx, cx, cx, r * 0.4, r * 0.88, [[0, '#cfe0a1'], [0.7, '#9cc061'], [1, '#6f9a3a']])
+  ctx.fill()
+  // Pith and seeds.
+  wobblyCircle(ctx, cx, cx, r * 0.5, random, 0.12)
+  ctx.fillStyle = '#e7ecc8'
+  ctx.fill()
+  const seeds = 6 + Math.floor(random() * 4)
+  for (let i = 0; i < seeds; i++) {
+    const a = (i / seeds) * Math.PI * 2 + random() * 0.4
+    const d = r * (0.22 + random() * 0.18)
+    ctx.save()
+    ctx.translate(cx + Math.cos(a) * d, cx + Math.sin(a) * d)
+    ctx.rotate(a)
+    ctx.beginPath()
+    ctx.ellipse(0, 0, s * 0.045, s * 0.03, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#f2ead0'
+    ctx.fill()
+    ctx.lineWidth = 1.5
+    ctx.strokeStyle = 'rgba(150, 140, 90, 0.7)'
+    ctx.stroke()
+    ctx.restore()
+  }
+  if (random() > 0.5) {
+    ctx.globalCompositeOperation = 'destination-out'
+    wobblyCircle(ctx, cx, cx, r * 0.16, random, 0.2)
+    ctx.fill()
+    ctx.globalCompositeOperation = 'source-over'
+  }
+})
+
+const arc = (ctx, cx, cy, radius, start, sweep, width, color) => {
+  ctx.lineCap = 'round'
+  ctx.lineWidth = width
+  ctx.strokeStyle = color
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, start, start + sweep)
+  ctx.stroke()
+}
+
+export const pepperAtlas = () => atlas(4, 192, (ctx, s, random) => {
+  const width = s * (0.085 + random() * 0.03)
+  const sweep = 1.4 + random() * 1.2
+  const start = -Math.PI / 2 - sweep / 2 + (random() - 0.5) * 0.4
+  const radius = s * (0.3 + random() * 0.06)
+  const cy = s / 2 + s * 0.12
+  arc(ctx, s / 2, cy, radius, start, sweep, width, '#246d18')
+  arc(ctx, s / 2, cy, radius - width * 0.12, start + 0.04, sweep - 0.08, width * 0.6, '#5f9f36')
+  arc(ctx, s / 2, cy, radius - width * 0.28, start + 0.06, sweep - 0.12, width * 0.2, '#9cc870')
+})
+
+export const onionAtlas = () => atlas(4, 192, (ctx, s, random) => {
+  const rings = 1 + Math.floor(random() * 2)
+  for (let i = 0; i < rings; i++) {
+    const radius = s * (0.36 - i * 0.07)
+    const sweep = 1.2 + random() * 1.4
+    const start = -Math.PI / 2 - sweep / 2 + (random() - 0.5) * 0.6
+    const cy = s / 2 + s * 0.12
+    arc(ctx, s / 2, cy, radius, start, sweep, s * 0.05, '#f3e0ea')
+    arc(ctx, s / 2, cy, radius + s * 0.019, start, sweep, s * 0.018, '#7e2a69')
+  }
+})
+
+export const hamAtlas = () => atlas(4, 192, (ctx, s, random) => {
+  const w = s * (0.32 + random() * 0.06)
+  ctx.save()
+  ctx.translate(s / 2, s / 2)
+  ctx.rotate((random() - 0.5) * 0.6)
+  ctx.beginPath()
+  const corners = [[-w, -w * 0.85], [w * 0.95, -w], [w, w * 0.9], [-w * 0.9, w]]
+  corners.forEach(([x, y], i) => {
+    const [nx, ny] = corners[(i + 1) % 4]
+    if (i === 0) ctx.moveTo(x, y)
+    ctx.quadraticCurveTo((x + nx) / 2 + (random() - 0.5) * w * 0.25, (y + ny) / 2 + (random() - 0.5) * w * 0.25, nx, ny)
+  })
+  ctx.closePath()
+  ctx.fillStyle = '#e6a29b'
+  ctx.fill()
+  ctx.lineWidth = s * 0.03
+  ctx.strokeStyle = '#d0837b'
+  ctx.stroke()
+  ctx.clip()
+  for (let i = 0; i < 14; i++) {
+    ctx.fillStyle = `rgba(250, 214, 206, ${0.3 + random() * 0.4})`
+    ctx.beginPath()
+    ctx.ellipse((random() - 0.5) * w * 1.8, (random() - 0.5) * w * 1.8, 2 + random() * 9, 1 + random() * 4, random() * 3, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+})
+
+export const pineappleAtlas = () => atlas(4, 192, (ctx, s, random) => {
+  ctx.save()
+  ctx.translate(s / 2, s / 2)
+  ctx.rotate((random() - 0.5) * 0.8)
+  const w = s * (0.3 + random() * 0.05)
+  const h = s * (0.2 + random() * 0.04)
+  ctx.beginPath()
+  ctx.moveTo(-w, h)
+  ctx.lineTo(w, h)
+  ctx.quadraticCurveTo(w * 0.8, -h * 0.2, w * 0.45, -h)
+  ctx.lineTo(-w * 0.45, -h)
+  ctx.quadraticCurveTo(-w * 0.8, -h * 0.2, -w, h)
+  ctx.closePath()
+  ctx.fillStyle = '#f2cd4a'
+  ctx.fill()
+  ctx.clip()
+  ctx.strokeStyle = 'rgba(214, 160, 36, 0.55)'
+  for (let i = 0; i < 26; i++) {
+    const x = -w + (i / 26) * w * 2
+    ctx.lineWidth = 1 + random() * 1.5
+    ctx.beginPath()
+    ctx.moveTo(x, h)
+    ctx.lineTo(x * 0.45 + (random() - 0.5) * 4, -h)
+    ctx.stroke()
+  }
+  ctx.fillStyle = 'rgba(255, 240, 170, 0.45)'
+  ctx.fillRect(-w, h * 0.55, w * 2, h * 0.5)
+  ctx.restore()
+})
+
+const leafHalfWidth = (t, width, lobes, phase) => {
+  let x = width * Math.sin(Math.PI * t ** 0.85) * (1 - 0.2 * t)
+  if (lobes) x *= 0.55 + 0.45 * Math.abs(Math.sin(t * Math.PI * lobes + phase))
+  return x
+}
+
+const leaf = (ctx, s, random, { length, width, lobes, color, rib }) => {
+  ctx.save()
+  ctx.translate(s / 2, s / 2)
+  ctx.rotate((random() - 0.5) * 0.5)
+  const L = s * length
+  const W = s * width
+  const outline = new Path2D()
+  const steps = 32
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const y = L / 2 - t * L
+    const x = leafHalfWidth(t, W, lobes, 0)
+    if (i === 0) outline.moveTo(x, y)
+    else outline.lineTo(x, y)
+  }
+  for (let i = steps; i >= 0; i--) {
+    const t = i / steps
+    outline.lineTo(-leafHalfWidth(t, W, lobes, 0.4), L / 2 - t * L)
+  }
+  outline.closePath()
+  ctx.fillStyle = color
+  ctx.fill(outline)
+  ctx.save()
+  ctx.clip(outline)
+  ctx.fillStyle = radial(ctx, -W * 0.3, -L * 0.1, 0, L * 0.6, [[0, 'rgba(255,255,220,0.18)'], [1, 'rgba(0,0,0,0.12)']])
+  ctx.fillRect(-s, -s, s * 2, s * 2)
+  ctx.strokeStyle = rib
+  ctx.lineWidth = s * 0.012
+  ctx.beginPath()
+  ctx.moveTo(0, L / 2 + 6)
+  ctx.lineTo(0, -L / 2)
+  ctx.stroke()
+  ctx.lineWidth = s * 0.006
+  for (let i = 1; i < 8; i++) {
+    const y = L / 2 - (i / 8) * L
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.quadraticCurveTo(W * 0.4, y - L * 0.04, W, y - L * 0.12)
+    ctx.moveTo(0, y)
+    ctx.quadraticCurveTo(-W * 0.4, y - L * 0.04, -W, y - L * 0.12)
+    ctx.stroke()
+  }
+  ctx.restore()
+  ctx.lineWidth = s * 0.012
+  ctx.strokeStyle = 'rgba(20, 50, 15, 0.4)'
+  ctx.stroke(outline)
+  ctx.restore()
+}
+
+export const basilAtlas = () => atlas(4, 256, (ctx, s, random) => {
+  leaf(ctx, s, random, { length: 0.78, width: 0.24 + random() * 0.05, color: '#2f8a2c', rib: 'rgba(170, 220, 140, 0.55)' })
+})
+
+export const rocketAtlas = () => atlas(4, 256, (ctx, s, random) => {
+  leaf(ctx, s, random, { length: 0.88, width: 0.16, lobes: 3 + Math.floor(random() * 2), color: '#3f7428', rib: 'rgba(190, 220, 150, 0.6)' })
+})
+
+/* ---------- Surfaces for 3D chunks ---------- */
+
+const surface = (size, paint) => {
+  const canvas = makeCanvas(size)
+  paint(canvas.getContext('2d'), size)
+  return toTexture(canvas)
+}
+
+const speckle = (ctx, size, count, colors, radius, random) => {
+  for (let i = 0; i < count; i++) {
+    ctx.fillStyle = colors[Math.floor(random() * colors.length)]
+    ctx.beginPath()
+    ctx.arc(random() * size, random() * size, radius[0] + random() * radius[1], 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+export const beefSurface = () => surface(256, (ctx, size) => {
+  ctx.fillStyle = '#5b2c1b'
+  ctx.fillRect(0, 0, size, size)
+  speckle(ctx, size, 900, ['#7a3a22', '#3a1a10', '#8e2a14', '#a5481f'], [0.5, 2.2], rng(5))
+  grain(ctx, { amount: 0.35, scale: 0.08, seed: 3 })
+})
+
+export const chickenSurface = () => surface(256, (ctx, size) => {
+  const random = rng(9)
+  ctx.fillStyle = '#e8d2ab'
+  ctx.fillRect(0, 0, size, size)
+  ctx.strokeStyle = 'rgba(190, 150, 100, 0.35)'
+  for (let i = 0; i < 160; i++) {
+    const y = random() * size
+    ctx.lineWidth = 0.6 + random() * 1.4
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.bezierCurveTo(size * 0.3, y + (random() - 0.5) * 12, size * 0.6, y + (random() - 0.5) * 12, size, y + (random() - 0.5) * 8)
+    ctx.stroke()
+  }
+  for (let i = 0; i < 14; i++) {
     const x = random() * size
     const y = random() * size
-    const angle = random() * Math.PI
+    ctx.fillStyle = radial(ctx, x, y, 0, 18 + random() * 30, [[0, 'rgba(176, 112, 50, 0.7)'], [1, 'rgba(176, 112, 50, 0)']])
+    ctx.fillRect(0, 0, size, size)
+  }
+  grain(ctx, { amount: 0.2, scale: 0.06, seed: 7 })
+})
+
+export const ndujaSurface = () => surface(256, (ctx, size) => {
+  ctx.fillStyle = '#b3341b'
+  ctx.fillRect(0, 0, size, size)
+  speckle(ctx, size, 700, ['#8d2412', '#d0542a', '#6e1a0c', '#e2793e'], [0.5, 2.5], rng(15))
+  grain(ctx, { amount: 0.3, scale: 0.05, seed: 11 })
+})
+
+export const cornSurface = () => surface(64, (ctx, size) => {
+  ctx.fillStyle = radial(ctx, size * 0.4, size * 0.35, 2, size * 0.7, [[0, '#ffe58a'], [0.6, '#f4c12c'], [1, '#d9961a']])
+  ctx.fillRect(0, 0, size, size)
+})
+
+/* ---------- The paper and the printed riso mat ---------- */
+
+export const paperTexture = () => {
+  const canvas = makeCanvas(512)
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#f4efe4'
+  ctx.fillRect(0, 0, 512, 512)
+  const random = rng(77)
+  const image = ctx.getImageData(0, 0, 512, 512)
+  for (let i = 0; i < image.data.length; i += 4) {
+    const n = (random() - 0.5) * 8
+    image.data[i] += n
+    image.data[i + 1] += n
+    image.data[i + 2] += n
+  }
+  ctx.putImageData(image, 0, 0)
+  for (let i = 0; i < 220; i++) {
+    ctx.strokeStyle = `rgba(150, 130, 100, ${0.03 + random() * 0.05})`
+    ctx.lineWidth = 0.6
+    const x = random() * 512
+    const y = random() * 512
+    const a = random() * Math.PI
     ctx.beginPath()
     ctx.moveTo(x, y)
-    ctx.lineTo(x + Math.cos(angle) * 120, y + Math.sin(angle) * 120)
+    ctx.quadraticCurveTo(x + Math.cos(a) * 6, y + Math.sin(a) * 6 + 3, x + Math.cos(a) * 14, y + Math.sin(a) * 14)
     ctx.stroke()
   }
-  for (let i = 0; i < 1200; i++) {
-    ctx.fillStyle = `rgba(255,248,232,${random() * 0.25})`
-    ctx.fillRect(random() * size, random() * size, 2, 2)
-  }
-})
+  const texture = toTexture(canvas)
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  return texture
+}
 
-export const pepperoniTexture = () => canvasTexture(256, (ctx, size) => {
-  const random = rng(77)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, size, size)
-  for (let i = 0; i < 70; i++) {
-    blob(ctx, random() * size, random() * size, 3 + random() * 7, 'rgba(255,236,220,ALPHA)', 0.9)
+// A thin halftone ring printed in riso blue, with a pink pass slightly out of register.
+export const risoMatTexture = () => {
+  const size = 2048
+  const canvas = makeCanvas(size)
+  const ctx = canvas.getContext('2d')
+  const c = size / 2
+  const step = 16
+  for (let y = step / 2; y < size; y += step) {
+    for (let x = step / 2; x < size; x += step) {
+      const d = Math.hypot(x - c, y - c) / c
+      if (d > 0.97 || d < 0.8) continue
+      const t = (d - 0.8) / 0.17
+      const r = step * 0.42 * Math.sin(t * Math.PI) ** 1.2
+      if (r < 0.7) continue
+      ctx.fillStyle = '#2c4fa3'
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.fill()
+    }
   }
-  for (let i = 0; i < 40; i++) {
-    blob(ctx, random() * size, random() * size, 2 + random() * 4, 'rgba(120,60,50,ALPHA)', 0.5)
-  }
-})
+  ctx.lineWidth = 5
+  ctx.strokeStyle = '#ff48b0'
+  ctx.beginPath()
+  ctx.arc(c + 8, c + 6, c * 0.985, 0, Math.PI * 2)
+  ctx.stroke()
+  return toTexture(canvas)
+}
 
-export const softDotTexture = () => canvasTexture(128, (ctx, size) => {
-  blob(ctx, size / 2, size / 2, size / 2, 'rgba(255,255,255,ALPHA)', 1)
-}, { srgb: false })
+// Soft contact shadow under the pizza, darkest right at the edge where it touches.
+export const shadowBlobTexture = () => {
+  const canvas = makeCanvas(512)
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = radial(ctx, 256, 256, 0, 256, [[0, 'rgba(255,255,255,0.55)'], [0.72, 'rgba(255,255,255,0.5)'], [0.8, 'rgba(255,255,255,0.36)'], [0.9, 'rgba(255,255,255,0.12)'], [1, 'rgba(255,255,255,0)']])
+  ctx.fillRect(0, 0, 512, 512)
+  return toTexture(canvas, { srgb: false })
+}
+
+export const softDotTexture = () => {
+  const canvas = makeCanvas(128)
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = radial(ctx, 64, 64, 0, 64, [[0, 'rgba(255,255,255,1)'], [1, 'rgba(255,255,255,0)']])
+  ctx.fillRect(0, 0, 128, 128)
+  return toTexture(canvas, { srgb: false })
+}
