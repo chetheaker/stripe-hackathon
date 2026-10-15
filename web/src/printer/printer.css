@@ -173,7 +173,7 @@
   bottom: 0;
   width: 336px;
   margin-left: -168px;
-  background: linear-gradient(to top, rgba(28, 24, 19, 0.34), rgba(28, 24, 19, 0));
+  background: linear-gradient(to top, rgba(28, 24, 19, 0.28), rgba(28, 24, 19, 0));
 }
 
 .paper-ink {
@@ -189,6 +189,7 @@
 .rx-center { height: 17px; justify-content: center; font-size: 11px; letter-spacing: 0.04em; }
 .rx-rule { height: 14px; font-size: 11px; color: #4a4740; }
 .rx-gap { height: 10px; }
+.rx-space { height: 7px; }
 .rx-item { height: 22px; font-size: 13px; font-weight: 600; }
 .rx-sub { height: 17px; font-size: 12px; }
 .rx-quote { height: 15px; font-size: 10.5px; color: #5b5750; }

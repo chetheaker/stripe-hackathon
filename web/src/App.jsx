@@ -82,7 +82,8 @@ export default function App() {
     if (['add', 'update', 'remove'].includes(lastEvent.type)) setGlow({ itemId: lastEvent.itemId, seq: lastEvent.seq })
     if (lastEvent.type === 'add') {
       const line = order.lines.find((candidate) => candidate.id === lastEvent.lineId)
-      flyToTicket(lastEvent.itemId, lastEvent.lineId, lineTitle(line))
+      // With the printer, things only reach the paper by printing out of the slot.
+      if (USE_TICKET) flyToTicket(lastEvent.itemId, lastEvent.lineId, lineTitle(line))
     }
     if (lastEvent.type === 'update' || lastEvent.type === 'remove') setFlashes((current) => ({ ...current, [lastEvent.lineId]: lastEvent.seq }))
     if (lastEvent.type === 'reject') {

@@ -128,7 +128,8 @@ export default function ReceiptPrinter({ order, actions, sound = true }) {
         if (gen !== generation.current) return
         printedRef.current = next
         setPrinted(next)
-        if (diverge !== -1) await sleep(140)
+        // Let the new rows render inside the printer before the motor starts feeding them out.
+        await sleep(diverge !== -1 ? 140 : 60)
         await printTo(paperLength(next), gen)
       } while (dirty.current && gen === generation.current)
     } finally {
@@ -238,7 +239,7 @@ export default function ReceiptPrinter({ order, actions, sound = true }) {
               </div>
             )}
           </div>
-          <div className="paper-shade" style={{ height: Math.min(40, fed) }} />
+          <div className="paper-shade" style={{ height: Math.min(14, fed) }} />
         </div>
       </div>
     </aside>

@@ -1,10 +1,11 @@
-import { COURSES, formatPrice, formatShortPrice, itemsIn, liveLines, priceFor } from './menu'
+import { COURSES, formatPrice, formatShortPrice, itemsIn, liveLines } from './menu'
 
-const Chillies = ({ level }) => (level > 0 ? <span className="tag tag-chilli" title={`Chilli level ${level}`}>{'🌶'.repeat(level)}</span> : null)
+// Small marks beside the name instead of a row of tags.
+const Chillies = ({ level }) => (level > 0 ? <span className="mark mark-chilli" title={`Chilli level ${level}`}>{'🌶'.repeat(level)}</span> : null)
 
 const Dietary = ({ item }) => {
-  if (item.dietary?.includes('vegan')) return <span className="tag tag-veg">Vegan</span>
-  if (item.dietary?.includes('vegetarian')) return <span className="tag tag-veg">Veggie</span>
+  if (item.dietary?.includes('vegan')) return <span className="mark mark-veg" title="Vegan">VG</span>
+  if (item.dietary?.includes('vegetarian')) return <span className="mark mark-veg" title="Vegetarian">V</span>
   return null
 }
 
@@ -14,16 +15,15 @@ function PizzaCard({ item, count, sizes, glow, onPick }) {
   return (
     <button className="pizza-card" data-item={item.id} data-glow={glow} data-in-order={count > 0} onClick={() => onPick(item)}>
       <div className="pizza-card-head">
-        <h3>{item.name}</h3>
+        <h3>
+          {item.name}
+          <Dietary item={item} />
+          <Chillies level={item.spiceLevel} />
+        </h3>
         <CountBadge count={count} />
       </div>
       <p className="pizza-desc">{item.description}</p>
       <div className="pizza-foot">
-        <div className="pizza-tags">
-          {item.popular && <span className="tag tag-popular">Popular</span>}
-          <Dietary item={item} />
-          <Chillies level={item.spiceLevel} />
-        </div>
         <div className="pizza-prices">
           {item.prices.map((price) => (
             <span key={price.size} className="pizza-price" data-picked={sizes.has(price.size)}>
@@ -43,7 +43,6 @@ const rowPrice = (item) => {
 }
 
 const rowDetail = (item) => {
-  if (item.category === 'drink' && item.prices.length > 1) return 'can / 1.5L'
   if (item.id === 'chicken_wings') return '6 / 12'
   return null
 }
@@ -92,9 +91,7 @@ export default function MenuBoard({ lines, glowItemId, spotlight, onPick, onBuil
       <section className="board-section" data-spotlight={spotlight === 'pizza'}>
         <header className="section-head">
           <h2>Pizzas</h2>
-          <p className="section-note">
-            Stone-baked · Small 10" · Medium 12" · Large 14" · Extra topping from {formatPrice(priceFor('extra_topping', 'small').unitAmount)} · Stuffed crust from {formatPrice(priceFor('stuffed_crust', 'small').unitAmount)} · Gluten-free base (small) {formatPrice(priceFor('gluten_free_base', 'small').unitAmount)}
-          </p>
+          <p className="section-note">Small 10" · Medium 12" · Large 14"</p>
         </header>
         <div className="pizza-grid">
           {itemsIn('pizza').map((item) => (
@@ -108,16 +105,6 @@ export default function MenuBoard({ lines, glowItemId, spotlight, onPick, onBuil
             />
           ))}
           <BuildCard glow={glowItemId === 'build_your_own'} onBuild={onBuild} />
-          <div className="deals-cell">
-            <h3>Meal deals</h3>
-            {itemsIn('meal_deal').map((item) => (
-              <button key={item.id} className="menu-row deal-row" data-item={item.id} data-glow={glowItemId === item.id} data-in-order={(counts[item.id] ?? 0) > 0} onClick={() => onPick(item)} title={item.description}>
-                <span className="menu-row-name">{item.name}</span>
-                <CountBadge count={counts[item.id] ?? 0} />
-                <span className="menu-row-price">{formatPrice(item.prices[0].unitAmount)}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -126,6 +113,7 @@ export default function MenuBoard({ lines, glowItemId, spotlight, onPick, onBuil
           <section key={category} className="board-section board-column" data-spotlight={spotlight === category}>
             <header className="section-head">
               <h2>{title}</h2>
+              {category === 'drink' && <p className="section-note">Can / 1.5L</p>}
               <span className="spotlight-label">{nudge}</span>
             </header>
             <div className="menu-rows">{itemsIn(category).map(row)}</div>
