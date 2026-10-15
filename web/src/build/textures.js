@@ -132,7 +132,7 @@ export const mushroomAtlas = () => atlas(4, 256, (ctx, s, random) => {
   path.lineTo(cx - stemW * 1.15, capY + stemH)
   path.bezierCurveTo(cx - stemW * 1.25, capY + stemH, cx - stemW * 0.9, capY + stemH * 0.5, cx - stemW, capY)
   path.closePath()
-  ctx.fillStyle = '#efe4cc'
+  ctx.fillStyle = radial(ctx, cx, capY, 0, capW * 1.2, [[0, '#e3d4b4'], [1, '#cdb48c']])
   ctx.fill(path)
   ctx.save()
   ctx.clip(path)
@@ -151,11 +151,11 @@ export const mushroomAtlas = () => atlas(4, 256, (ctx, s, random) => {
     ctx.stroke()
   }
   // Brown skin round the cap edge.
-  ctx.lineWidth = s * 0.035
-  ctx.strokeStyle = '#8a6440'
+  ctx.lineWidth = s * 0.04
+  ctx.strokeStyle = '#6f4e30'
   ctx.stroke(path)
-  ctx.lineWidth = s * 0.07
-  ctx.strokeStyle = 'rgba(150, 112, 74, 0.35)'
+  ctx.lineWidth = s * 0.09
+  ctx.strokeStyle = 'rgba(140, 100, 62, 0.4)'
   ctx.stroke(path)
   // Fibres down the stem.
   ctx.strokeStyle = 'rgba(170, 140, 104, 0.25)'
@@ -194,10 +194,10 @@ export const jalapenoAtlas = () => atlas(4, 192, (ctx, s, random) => {
   const cx = s / 2
   const r = s * (0.4 + random() * 0.04)
   wobblyCircle(ctx, cx, cx, r, random, 0.06)
-  ctx.fillStyle = '#2f5f1a'
+  ctx.fillStyle = '#23441a'
   ctx.fill()
-  wobblyCircle(ctx, cx, cx, r * 0.88, random, 0.05)
-  ctx.fillStyle = radial(ctx, cx, cx, r * 0.4, r * 0.88, [[0, '#cfe0a1'], [0.7, '#9cc061'], [1, '#6f9a3a']])
+  wobblyCircle(ctx, cx, cx, r * 0.86, random, 0.05)
+  ctx.fillStyle = radial(ctx, cx, cx, r * 0.4, r * 0.86, [[0, '#c9d49a'], [0.7, '#8fa95a'], [1, '#5d7d34']])
   ctx.fill()
   // Pith and seeds.
   wobblyCircle(ctx, cx, cx, r * 0.5, random, 0.12)

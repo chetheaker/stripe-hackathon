@@ -125,10 +125,10 @@ const chunk = ({ geometry, surface, material = {}, baked, ...rest }) => () => {
 /* ---------- The toppings ---------- */
 
 const SPECS = {
-  pepperoni: card({ atlas: loadAtlas(pepperoniAtlasUrl), grid: [4, 2], size: 0.23, thickness: 0.012, cup: 0.05, bakeTint: '#c99a8f', material: { roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.35 }, count: 16, spacing: 0.2 }),
-  mushrooms: card({ atlas: mushroomAtlas, size: 0.22, thickness: 0.012, bakeTint: '#c7ab88', material: { roughness: 0.7, sheen: 0.4 }, count: 12, spacing: 0.17 }),
+  pepperoni: card({ atlas: loadAtlas(pepperoniAtlasUrl), grid: [4, 2], size: 0.23, thickness: 0.012, cup: 0.05, bakeTint: '#e2c4bc', material: { roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.35 }, count: 16, spacing: 0.2 }),
+  mushrooms: card({ atlas: mushroomAtlas, size: 0.22, thickness: 0.012, bakeTint: '#b79a74', material: { roughness: 0.75 }, count: 12, spacing: 0.17 }),
   black_olives: card({ atlas: oliveAtlas, size: 0.1, thickness: 0.016, bakeTint: '#b0a2a8', material: { roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.15 }, count: 16, spacing: 0.1 }),
-  jalapenos: card({ atlas: jalapenoAtlas, size: 0.13, thickness: 0.01, bakeTint: '#c4c1a0', material: { roughness: 0.32, clearcoat: 0.8 }, count: 14, spacing: 0.12 }),
+  jalapenos: card({ atlas: jalapenoAtlas, size: 0.15, thickness: 0.01, bakeTint: '#c4c1a0', material: { roughness: 0.32, clearcoat: 0.8 }, count: 14, spacing: 0.12 }),
   green_peppers: card({ atlas: pepperAtlas, size: 0.22, thickness: 0.014, bakeTint: '#b9b49a', material: { roughness: 0.25, clearcoat: 0.9, clearcoatRoughness: 0.2 }, count: 12, spacing: 0.14 }),
   red_onion: card({ atlas: onionAtlas, size: 0.22, thickness: 0.008, bakeTint: '#d7c3c0', material: { roughness: 0.3, clearcoat: 0.7, transmission: 0.15, thickness: 0.01 }, count: 12, spacing: 0.13 }),
   ham: card({ atlas: hamAtlas, size: 0.19, thickness: 0.008, cup: 0.02, bakeTint: '#d6aaa0', material: { roughness: 0.55, sheen: 0.3 }, count: 10, spacing: 0.17 }),
@@ -138,7 +138,7 @@ const SPECS = {
   spicy_beef: chunk({ geometry: () => lumpy(0.022, 1, 0.75, 0.7, 3), surface: beefSurface, baked: '#3b1d12', material: { roughness: 0.78 }, count: 32, spacing: 0.08 }),
   roast_chicken: chunk({ geometry: () => lumpy(0.042, 2, 0.55, 0.45, 9), surface: chickenSurface, baked: '#c99f6a', material: { roughness: 0.7, sheen: 0.3 }, count: 14, spacing: 0.15 }),
   sweetcorn: chunk({ geometry: () => lumpy(0.016, 1, 0.8, 0.25, 15).scale(1, 0.9, 1.25), surface: cornSurface, baked: '#e6aa2a', material: { roughness: 0.25, clearcoat: 0.8 }, count: 42, spacing: 0.065 }),
-  nduja: chunk({ geometry: () => lumpy(0.048, 2, 0.42, 0.55, 21), surface: ndujaSurface, baked: '#7e1f0e', material: { roughness: 0.38, clearcoat: 0.6, clearcoatRoughness: 0.3 }, count: 10, spacing: 0.18 }),
+  nduja: chunk({ geometry: () => lumpy(0.048, 2, 0.42, 0.55, 21), surface: ndujaSurface, baked: '#a3301a', material: { roughness: 0.38, clearcoat: 0.6, clearcoatRoughness: 0.3 }, count: 10, spacing: 0.18 }),
 }
 
 const cache = {}

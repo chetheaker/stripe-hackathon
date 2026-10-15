@@ -57,7 +57,7 @@ const SAUCES = {
   bbq: [[0.09, 0.022, 0.008], [0.2, 0.06, 0.02], [0.42, 0.2, 0.09]],
   garlic: [[0.78, 0.7, 0.52], [0.92, 0.86, 0.7], [0.82, 0.68, 0.46]],
 }
-const CHEESES = { mozzarella: [0.93, 0.89, 0.77], vegan: [0.94, 0.88, 0.66] }
+const CHEESES = { mozzarella: [0.78, 0.72, 0.56], vegan: [0.8, 0.72, 0.48] }
 
 /* ---------- Dough ---------- */
 
@@ -230,23 +230,30 @@ const CHEESE_FRAGMENT = /* glsl */ `
   float th = 1.08 - uCover * 0.98;
   if ( blob < th ) discard;
   float body = smoothstep( th, th + 0.14, blob );
-  vec3 col = mix( uCheese, uCheese * vec3( 1.03, 0.94, 0.72 ), uBake );
-  float grease = smoothstep( 0.2, 0.6, fbm3( p * 2.6 + 11.0 ) ) * uBake;
-  col = mix( col, vec3( 0.93, 0.56, 0.2 ), grease * 0.4 );
-  vec2 b = worley( p * 15.0 + 3.0 );
-  float browned = smoothstep( 0.3, 0.9, uBake );
-  float blister = smoothstep( 0.4, 0.06, b.x ) * step( 0.6, b.y ) * browned;
-  col = mix( col, vec3( 0.64, 0.38, 0.13 ), blister * 0.78 );
-  float charSpot = smoothstep( 0.17, 0.02, b.x ) * step( 0.84, b.y ) * smoothstep( 0.65, 1.0, uBake );
-  col = mix( col, vec3( 0.22, 0.1, 0.035 ), charSpot * 0.8 );
-  col *= mix( 0.8, 1.0, body );
+  float browned = smoothstep( 0.3, 0.95, uBake );
+  vec3 col = mix( uCheese, uCheese * vec3( 1.0, 0.86, 0.58 ), uBake );
+  // Broad golden patches where the oven caught it.
+  float golden = smoothstep( -0.1, 0.5, fbm3( p * 4.5 + 2.0 ) ) * browned;
+  col = mix( col, vec3( 0.86, 0.56, 0.2 ), golden * 0.55 );
+  float grease = smoothstep( 0.1, 0.55, fbm3( p * 2.6 + 11.0 ) ) * uBake;
+  col = mix( col, vec3( 0.88, 0.45, 0.12 ), grease * 0.4 );
+  // Blisters: brown rings with paler centres, a few charred.
+  vec2 b = worley( p * 9.0 + 3.0 );
+  float blister = smoothstep( 0.42, 0.12, b.x ) * step( 0.4, b.y ) * browned;
+  float blisterRing = smoothstep( 0.42, 0.26, b.x ) * smoothstep( 0.08, 0.22, b.x ) * step( 0.4, b.y ) * browned;
+  col = mix( col, vec3( 0.58, 0.3, 0.08 ), blister * 0.55 + blisterRing * 0.35 );
+  float charSpot = smoothstep( 0.2, 0.04, b.x ) * step( 0.86, b.y ) * smoothstep( 0.6, 1.0, uBake );
+  col = mix( col, vec3( 0.2, 0.09, 0.03 ), charSpot * 0.85 );
+  float freckle = smoothstep( 0.7, 0.95, snoise( p * 48.0 ) ) * browned;
+  col = mix( col, vec3( 0.5, 0.26, 0.08 ), freckle * 0.45 );
+  col *= mix( 0.72, 1.0, body );
   diffuseColor.rgb = col;
-  cheeseHeight = ( body * 0.006 + blister * 0.004 + snoise( p * 45.0 ) * 0.0008 ) * uHeightScale;
+  cheeseHeight = ( body * 0.006 + blister * 0.006 + golden * 0.002 + snoise( p * 45.0 ) * 0.0008 ) * uHeightScale;
   cheeseRough = mix( 0.55, 0.38, uBake ) - grease * 0.15;
 `
 
 const cheeseMaterial = (uniforms) => {
-  const material = new THREE.MeshPhysicalMaterial({ roughness: 0.5, sheen: 0.5, sheenColor: new THREE.Color('#fffaf0'), clearcoat: 0.25, clearcoatRoughness: 0.4 })
+  const material = new THREE.MeshPhysicalMaterial({ roughness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.35 })
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms)
     shader.vertexShader = shader.vertexShader
@@ -442,7 +449,7 @@ function Cheese({ cheese, foot, bake }) {
     const b = bake.current
 
     // Before the oven it's all grated cheese; the oven melts it into one layer.
-    const cover = on ? smooth(0.1, 0.75, b) * 0.96 : 0
+    const cover = on ? smooth(0.1, 0.75, b) * 0.72 : 0
     uniforms.uCover.value += (cover - uniforms.uCover.value) * Math.min(1, dt * 8)
     uniforms.uBake.value = b
     layer.current.visible = uniforms.uCover.value > 0.01
@@ -471,7 +478,7 @@ function Cheese({ cheese, foot, bake }) {
         <circleGeometry args={[1, 180]} />
       </mesh>
       <instancedMesh ref={shreds} args={[geometry, null, pieces.length]} castShadow receiveShadow frustumCulled={false}>
-        <meshPhysicalMaterial color="#efe3c4" roughness={0.42} sheen={0.7} sheenColor="#fffaf0" clearcoat={0.2} clearcoatRoughness={0.5} />
+        <meshPhysicalMaterial color="#e2d4b0" roughness={0.45} sheen={0.4} sheenColor="#fff6e6" clearcoat={0.2} clearcoatRoughness={0.5} />
       </instancedMesh>
     </group>
   )
@@ -690,7 +697,7 @@ const CAMERA = {
   sauce: { position: [0, 6.3, 3.4], look: [0, -0.55, 0.3] },
   cheese: { position: [0, 6.3, 3.4], look: [0, -0.55, 0.3] },
   toppings: { position: [0, 5.9, 3.9], look: [0, -0.55, 0.32] },
-  bake: { position: [0, 4.7, 4.8], look: [0, -0.35, 0.3] },
+  bake: { position: [0, 5.0, 5.5], look: [0, -0.3, 0.3] },
 }
 
 function CameraRig({ step }) {
@@ -731,7 +738,7 @@ export default function PizzaScene({ build, onBaked }) {
       <directionalLight
         ref={keyLight}
         position={[-3.4, 7.2, 2.8]}
-        intensity={2.1}
+        intensity={1.6}
         color="#fff6ec"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -745,9 +752,9 @@ export default function PizzaScene({ build, onBaked }) {
         shadow-camera-far={20}
       />
       <Environment resolution={512} frames={1}>
-        <Lightformer form="rect" intensity={2.6} position={[-4, 6, 3]} scale={[7, 7, 1]} onUpdate={aimAtCentre} color="#fff8f0" />
+        <Lightformer form="rect" intensity={1.8} position={[-4, 6, 3]} scale={[7, 7, 1]} onUpdate={aimAtCentre} color="#fff8f0" />
         <Lightformer form="rect" intensity={0.7} position={[5, 3, 1]} scale={[6, 4, 1]} onUpdate={aimAtCentre} color="#fff1e4" />
-        <Lightformer form="rect" intensity={1.1} position={[0, 9, 0]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} color="#ffffff" />
+        <Lightformer form="rect" intensity={0.8} position={[0, 9, 0]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} color="#ffffff" />
         <Lightformer form="rect" intensity={0.9} position={[0, 3, -6]} scale={[10, 3, 1]} onUpdate={aimAtCentre} color="#ffe2c8" />
       </Environment>
 

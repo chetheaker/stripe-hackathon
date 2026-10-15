@@ -13,6 +13,8 @@ import './build.css'
 const PizzaScene = lazy(() => import('./PizzaScene'))
 
 const EASE_OUT = [0.23, 1, 0.32, 1]
+// ?debug=hold keeps the finished pizza on screen instead of moving on to the ticket.
+const HOLD_BAKED = new URLSearchParams(location.search).getAll('debug').includes('hold')
 
 const PROMPTS = {
   base: 'What size are we making?',
@@ -214,7 +216,7 @@ export default function BuildMode({ build, captions, dispatch }) {
   }, [build.lastChange?.seq])
 
   useEffect(() => {
-    if (!baked) return
+    if (!baked || HOLD_BAKED) return
     const timer = setTimeout(() => dispatch({ type: 'build_done' }), 1500)
     return () => clearTimeout(timer)
   }, [baked, dispatch])
