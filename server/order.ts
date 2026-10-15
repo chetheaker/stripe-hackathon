@@ -91,7 +91,14 @@ export class OrderSession {
     });
     this.pushCart();
     for (const n of r.notices) this.notice(n);
-    for (const u of r.unrecognised) this.notice(`Sorry, we don't have "${u.text}" — ${u.reason}`);
+    // The agent re-derives everything from the whole transcript, so the same miss comes back on every later
+    // utterance (often with reworded reasons). Tell the customer about each one once.
+    for (const u of r.unrecognised) {
+      const key = `unrecognised:${u.text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`;
+      if (this.sentNotices.has(key)) continue;
+      this.sentNotices.add(key);
+      this.notice(`Sorry, we don't have "${u.text}". ${u.reason}`);
+    }
     for (const n of r.needs_confirmation) this.notice(n.question);
     // Only act on "that's all" if no newer speech is waiting to be reconciled.
     if (r.order_complete && latest) await this.checkout();

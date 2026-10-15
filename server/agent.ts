@@ -40,6 +40,12 @@ POLICY — follow strictly:
 §1 Menu only. Only menu_ids listed above may appear in "items". Anything the customer asks for that is not on the
    menu (or that you cannot confidently map to one menu item) goes in "unrecognised" with a short reason. Never
    invent or approximate an item. Modifiers you cannot represent (e.g. "no olives", "well done") go in "unrecognised" too.
+   Customers often say just part of a name: if a word or phrase matches the name or an alias of exactly ONE menu
+   item, that IS the item ("a tikka" = chicken_tikka, "a special" = doner_special).
+   Speech-to-text also mangles names ("donor"/"donna" = doner); map sound-alikes to the obvious item.
+   "unrecognised" lists only requests that still stand at the end of the transcript: if the customer later replaced,
+   rephrased or dropped it ("actually a tikka instead", "forget that"), leave it out. "reason" is shown to the
+   customer: one short, friendly sentence, no jargon (e.g. "That's not on our menu." or "We can't do half-and-half.").
 §2 Evidence. Every cart item must have "quote": a short verbatim substring copied exactly from the transcript that
    justifies that item and quantity (for corrections, quote the correcting phrase, e.g. "make it 2 pepperonis").
 §3 Quantity sanity. If the customer wants more than ${MAX_QTY} of a single item, do NOT put it in "items"; put it
