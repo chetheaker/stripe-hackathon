@@ -57,13 +57,31 @@ Optional side quest: best use of Cognee memory (e.g. a returning customer saying
 
 These are the proposal; keep this list in sync with what the code actually does, because it's what we show judges.
 
-- Only items and sizes in `menu.json` can be ordered. Anything else gets a polite "we don't do that" and a suggestion.
-- Prices always come from `menu.json` / Stripe, never from the LLM. No discounts, ever, unless a meal deal applies.
-- Required options must be chosen before checkout (wing sauce, ice cream flavour). Gluten-free base is small only.
-- Quantity cap per order (e.g. more than 10 pizzas needs staff approval), as a visible "needs approval" state.
-- Allergen questions are answered from `menu.json` only, always with the kitchen allergen notice.
-- The order is read back and confirmed before the QR code appears.
+These are what the code enforces now (server-side, whatever the AI says), unless marked "not built yet".
+
+- Only items and sizes in `menu.json` can be ordered. Anything else is never added; the kiosk says "we don't do that" and suggests one real menu item.
+- Out-of-stock items (listed in `data/out-of-stock.json`, currently Rocco's Nduja & Hot Honey) are never added; the kiosk says so and suggests something similar.
+- Every line needs the customer's own words as evidence; a line the AI can't quote from the transcript is dropped.
+- If a size isn't said, the kiosk asks ("Medium or large on the pepperoni?") but adds the default size meanwhile, marked "(default)", so the order never gets stuck.
+- Prices always come from `menu.json` / Stripe, never from the LLM. The AI is never allowed to say a price or total out loud; the server checks every spoken line and only the server reads out the total. No discounts.
+- At most one upsell per order, and only once there's a pizza in the order. It is only added if the customer says yes.
+- More than 10 of one item is held back for staff to confirm.
+- The order is read back by the server (items, sizes and the total from the menu) and the customer must say yes before the QR code appears. Changing anything sends it back to ordering.
+- Not built yet: required options (wing sauce, ice cream flavour), gluten-free small only, allergen answers.
 - Every change records the quote that caused it and the rule that allowed it. That record is the audit trail on screen.
+
+## Kiosk ↔ server messages (WebSocket `/ws`)
+
+Full table in `README.md`. The voice ones Alex may want to render:
+
+- server → kiosk `{type:"say", text, audio_url}`: the kiosk is talking. Show `text` (currently a "kiosk says" line at the top of the left panel, added by `web/voice.ts`); `voice.ts` plays the audio.
+- server → kiosk `{type:"stop_speaking"}`: the customer talked over the kiosk; stop the audio.
+- server → kiosk `{type:"status", status}`: `ordering`, `awaiting_confirmation` (order read back, waiting for "yes"), `awaiting_payment` (QR showing) or `paid`.
+- kiosk → server `{type:"speaking", on}`: sent by `voice.ts` when audio starts and stops.
+- kiosk → server `{type:"done"}`: the Done button. First press reads the order back; pressing again while it's waiting for "yes" skips to the QR. `{type:"checkout_now"}` skips straight to the QR (testing).
+- Barge-in (talking over the kiosk) is on by default, for a headset. Open the kiosk with `?bargein=0` when using speakers, so it doesn't hear itself.
+
+The voice is Deepgram Aura-2 `aura-2-draco-en` (British, warm), set by `TTS_MODEL` in `.env`.
 
 ## Known gotchas
 
@@ -87,9 +105,10 @@ These are the proposal; keep this list in sync with what the code actually does,
 - [x] Repo created (Che)
 - [x] Stripe sandbox set up, menu seeded, test checkout priced correctly (£52.45 sample order)
 - [ ] Order JSON shape agreed
-- [ ] Transcription → order changes (Che)
+- [x] Transcription → order changes (Che)
+- [x] Kiosk talks back (Deepgram Aura-2 voice): asks sizes, says not on menu / out of stock, one upsell, reads the order back and waits for "yes" (Che)
 - [ ] Order screen + QR + paid state (Alex)
-- [ ] Checkout Session creation from an order
+- [x] Checkout Session creation from an order
 - [ ] Guardrails and audit trail visible on screen
 - [ ] Repo made public
 - [ ] Demo video recorded and submitted by 21:00

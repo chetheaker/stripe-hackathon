@@ -6,6 +6,7 @@ import { MENU } from "./menu.js";
 import { OrderSession, findByOrderId } from "./order.js";
 import { Stt, hasDeepgram } from "./stt.js";
 import { verifyWebhook } from "./stripe.js";
+import { streamTts } from "./tts.js";
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -44,19 +45,36 @@ app.get("/api/health", (_req, res) => {
 app.get("/api/menu", (_req, res) => {
   res.json(MENU);
 });
+app.get("/api/tts/:id", (req, res) => {
+  streamTts(req.params.id, res).catch((e) => {
+    console.error("[tts]", (e as Error).message);
+    if (!res.headersSent) res.status(502).send("tts failed");
+  });
+});
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/ws" });
 
-wss.on("connection", (ws) => {
-  console.log("[ws] kiosk connected");
+wss.on("connection", (ws, req) => {
+  // Barge-in (customer can talk over the kiosk) is on by default — good with a headset. ?bargein=0 turns it off:
+  // then transcripts are ignored while the kiosk speaks (and the kiosk stops sending mic audio), so it can't hear itself.
+  const bargeIn = new URL(req.url ?? "/", "http://x").searchParams.get("bargein") !== "0";
+  console.log(`[ws] kiosk connected (barge-in ${bargeIn ? "on" : "off"})`);
   const session = new OrderSession(ws);
   const stt = new Stt(
-    (text, final) => {
+    (text, final, speechFinal) => {
+      if (session.speaking) {
+        if (!bargeIn) return; // echo guard
+        session.speaking = false;
+        session.send({ type: "stop_speaking" });
+      }
+      session.interrupt(); // customer is talking: don't speak a stale reply over them
       session.send({ type: "transcript", text, final });
       if (final) session.addFinal(text);
+      if (speechFinal) session.endOfTurn();
     },
     (msg) => session.error(msg),
+    () => session.endOfTurn(),
   );
   session.pushCart();
   if (!hasDeepgram()) session.notice("Voice input is off (no DEEPGRAM_API_KEY) — type your order below.");
@@ -67,16 +85,20 @@ wss.on("connection", (ws) => {
       const buf = Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data as Buffer);
       return stt.push(buf);
     }
-    let msg: { type?: string; text?: string };
+    let msg: { type?: string; text?: string; on?: boolean };
     try { msg = JSON.parse(data.toString()); } catch { return session.error("Bad message"); }
     switch (msg.type) {
       case "text": // typed fallback — behaves exactly like a final transcript chunk
         if (msg.text?.trim()) {
           session.send({ type: "transcript", text: msg.text.trim(), final: true });
+          session.interrupt();
           session.addFinal(msg.text);
+          session.endOfTurn();
         }
         break;
-      case "done": void session.checkout(); break;
+      case "speaking": session.speaking = !!msg.on; break;
+      case "done": session.done(); break; // read-back first; pressing again while awaiting confirmation = checkout
+      case "checkout_now": void session.checkout(); break; // testing shortcut: skip the read-back
       case "reset": stt.close(); session.reset(); break;
       default: session.error(`Unknown message type: ${msg.type}`);
     }
