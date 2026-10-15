@@ -1,56 +1,12 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pizza Kiosk</title>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">🍕 Say your order</div>
-    <div class="status"><span id="conn" class="dot"></span><span id="mic-status">Mic off</span></div>
-  </header>
-
-  <main class="layout">
-    <section class="panel transcript-panel">
-      <h2>We heard</h2>
-      <div id="transcript" class="transcript">
-        <p class="placeholder">Tap <b>Start</b> and tell us what you'd like — e.g. "Two pepperonis and a diet coke, that's all."</p>
-      </div>
-      <form id="text-form" class="text-form" autocomplete="off">
-        <input id="text-input" type="text" placeholder="…or type your order here" />
-        <button type="submit" class="btn">Send</button>
-      </form>
-      <div class="controls">
-        <button id="start" class="btn btn-primary">🎙 Start</button>
-        <button id="done" class="btn btn-done">✔ Done</button>
-        <button id="reset" class="btn btn-ghost">↺ Reset</button>
-      </div>
-    </section>
-
-    <section class="panel cart-panel">
-      <h2>Your order</h2>
-      <ul id="cart" class="cart"></ul>
-      <p id="cart-empty" class="placeholder">Nothing yet.</p>
-      <div class="total-row"><span>Total</span><span id="total"></span></div>
-      <div id="notices" class="notices"></div>
-      <div id="qr-area" class="qr-area hidden">
-        <p class="qr-title">Scan to pay</p>
-        <canvas id="qr"></canvas>
-        <a id="qr-link" target="_blank" rel="noopener">Open checkout</a>
-      </div>
-    </section>
-  </main>
-
-  <div id="overlay" class="overlay hidden">
-    <div class="overlay-card">
-      <div class="overlay-tick">✅</div>
-      <div class="overlay-title">Payment successful</div>
-      <div class="overlay-sub">Next customer please</div>
-    </div>
-  </div>
-
-  <script type="module" src="./main.ts"></script>
-</body>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rocco's Pizza</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

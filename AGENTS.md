@@ -70,10 +70,20 @@ These are the proposal; keep this list in sync with what the code actually does,
 - Stripe Checkout shows only the product name, not the price's size, so a small and a large Pepperoni would both read "Pepperoni". For clear receipts, build each line with `price_data` (`product_data.name` such as "Large Pepperoni, stuffed crust") and take `unit_amount` from `menu.json`, or accept the plain names.
 - The event room will be noisy. Use a headset mic for the demo, and keep a typed or pre-recorded input as a fallback.
 
+## The order screen (`web/`)
+
+- **Stack:** React 18 + Vite (root `vite.config.ts`, root `web`), Motion for list layout, Sonner for toasts, `qrcode.react`. Design and motion follow Emil Kowalski's skills (https://github.com/emilkowalski/skills): custom ease-out curves, transform/opacity only, reduced-motion fallbacks.
+- **Run:** `npm run dev:web` and open http://localhost:5173. Che's original plain kiosk is still at http://localhost:5173/basic/.
+- **Layout (option A, "menu board that lights up"):** the whole menu is always on screen; items glow and a chip flies to the ticket when mentioned. The ticket on the right shows every line with the customer's quote and the rule ids that allowed it; removed lines stay struck through. The next course they haven't touched (sides, dips, drinks, desserts) is highlighted and offered as a nudge. "That's everything" plays a read-back, then the ticket flips to the QR code, and a PAID stamp lands on payment.
+- **Demo mode (default):** a scripted conversation in `web/src/demoScript.js`. Keys: → next step, A autoplay, R reset, P mark paid, H hide demo controls. Without the server the QR is a placeholder link.
+- **Live mode:** open `/?live` with Che's server running (`npm run dev`). The screen connects to `/ws`, diffs each `cart` snapshot into add / update / remove animations, shows `transcript` as captions, `notice` as toasts, and reacts to `checkout` and `paid`. Taps on the board send `{type:'text'}`; "Yes, that's right" sends `{type:'done'}`; the mic button streams audio.
+- **Order events:** the screen's internal event shapes are documented at the top of `web/src/order.js`. Sizes, extras, "no X" and sauces only show in live mode once the server sends them per cart line (e.g. `size`).
+- **House rules** (R1–R7) live in `web/src/policy.js` and must match the Guardrails list above.
+- **Menu photography:** four generated style-review samples and their prompts are saved in `output/menu-style-review/` (Pepperoni in clean overhead, warm counter and dark studio styles, plus BBQ wings in the clean style). Awaiting Alex's style choice before generating the full menu; samples are not yet wired into the screen.
+
 ## Still to decide
 
-- The exact order JSON shape shared between Che's backend and Alex's screen (proposed per line: item id, size, quantity, toppings added or removed, options, notes, source quote).
-- Frontend stack, transcription provider and LLM.
+- Whether Che's cart lines gain `size`, `extras`, `without` and `options` so live mode shows the same detail as the demo.
 - Whether to try the Cognee side quest.
 
 ## Repo conventions
@@ -88,8 +98,8 @@ These are the proposal; keep this list in sync with what the code actually does,
 - [x] Stripe sandbox set up, menu seeded, test checkout priced correctly (£52.45 sample order)
 - [ ] Order JSON shape agreed
 - [ ] Transcription → order changes (Che)
-- [ ] Order screen + QR + paid state (Alex)
+- [x] Order screen + QR + paid state (Alex), demo mode working; live mode wired to Che's `/ws` but not yet tested against the running server
 - [ ] Checkout Session creation from an order
-- [ ] Guardrails and audit trail visible on screen
+- [x] Guardrails and audit trail visible on screen (demo mode)
 - [ ] Repo made public
 - [ ] Demo video recorded and submitted by 21:00

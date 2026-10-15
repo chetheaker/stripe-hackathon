@@ -1,0 +1,312 @@
+/*
+  Risograph theme. Two spot inks (blue, fluorescent pink) on uncoated off-white paper.
+  Loaded last, so it restyles the base stylesheet without touching it.
+  Hierarchy: Anton only for the wordmark and section titles; Archivo for everything you read;
+  misregistration and halftone only where they mark state (in the order, suggested next).
+*/
+
+:root {
+  --ink: #24222b;
+  --riso-blue: #2c4fa3;
+  --riso-pink: #ff48b0;
+  --riso-magenta: #c2156e;
+  --paper-stock: #f4efe4;
+  --paper-card: #fbf8f1;
+
+  --board: var(--paper-stock);
+  --board-raised: var(--paper-card);
+  --board-hover: #fff3f9;
+  --hairline: rgba(36, 34, 43, 0.16);
+  --cream: var(--ink);
+  --cream-muted: #4a4752;
+  --cream-faint: #6f6b76;
+  --tomato: var(--riso-blue);
+  --tomato-soft: rgba(44, 79, 163, 0.1);
+  --basil: var(--riso-blue);
+  --gold: var(--riso-pink);
+  --gold-ink: var(--riso-magenta);
+  --gold-soft: rgba(255, 72, 176, 0.12);
+
+  --font-display: 'Anton', 'Archivo Variable', sans-serif;
+  --font-body: 'Archivo Variable', system-ui, sans-serif;
+
+  --halftone-pink: radial-gradient(circle, rgba(255, 72, 176, 0.32) 1.1px, transparent 1.6px);
+  --halftone-blue: radial-gradient(circle, rgba(44, 79, 163, 0.28) 1px, transparent 1.5px);
+  --misregister: 2px 2px 0 var(--riso-pink);
+}
+
+body { background: var(--paper-stock); color: var(--ink); }
+
+/* ---------- Top bar ---------- */
+
+.topbar { border-bottom: 2px solid var(--ink); background: var(--paper-stock); }
+
+.brand-name {
+  font-family: 'Anton', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--riso-blue);
+  text-shadow: var(--misregister);
+}
+
+.brand-tagline { font-size: 13px; font-weight: 500; color: var(--cream-muted); padding-left: 14px; border-left: 1.5px solid var(--ink); }
+
+.button { border-radius: 4px; font-weight: 700; }
+.button-ghost,
+.button-small {
+  border: 1.5px solid var(--ink);
+  background: var(--paper-card);
+  color: var(--ink);
+  box-shadow: 2px 2px 0 var(--riso-blue);
+}
+.button-ghost { height: 36px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.button-small[data-on='true'] { background: var(--riso-pink); color: var(--ink); }
+.button-primary { background: var(--riso-blue); color: #fff; box-shadow: 3px 3px 0 var(--riso-pink); }
+
+@media (hover: hover) and (pointer: fine) {
+  .button-ghost:hover, .button-small:hover:not(:disabled) { background: var(--board-hover); color: var(--ink); border-color: var(--ink); }
+}
+
+.demo-bar { border: 1.5px solid var(--ink); border-radius: 4px; background: var(--paper-card); }
+.demo-step { color: var(--riso-magenta); }
+
+/* ---------- Menu board ---------- */
+
+.section-head { margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); }
+.section-head h2 {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.section-note { font-size: 12px; color: var(--cream-muted); }
+
+.board-section[data-spotlight='true'] .section-head h2 { color: var(--riso-blue); text-shadow: var(--misregister); }
+.spotlight-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--riso-pink);
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+
+/* Suggested course: a soft pink halftone wash behind the column. */
+.board-column::before {
+  inset: -8px -10px -8px;
+  border-radius: 6px;
+  background: var(--halftone-pink), rgba(255, 72, 176, 0.05);
+  background-size: 7px 7px, auto;
+}
+.board-column[data-spotlight='true']::before { opacity: 1; }
+
+/* Shared highlight for anything just said: a pink ring with an offset, like a second ink pass. */
+.pizza-card::after, .menu-row::after {
+  box-shadow: 0 0 0 2.5px var(--riso-pink), 4px 4px 0 2.5px var(--riso-blue);
+}
+
+.pizza-card {
+  gap: 5px;
+  padding: 11px 13px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper-card);
+}
+.pizza-card[data-in-order='true'] {
+  border: 2px solid var(--riso-blue);
+  background: var(--halftone-pink), var(--paper-card);
+  background-size: 6px 6px, auto;
+  box-shadow: 3px 3px 0 var(--riso-blue);
+}
+
+.pizza-card h3 {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.pizza-card[data-in-order='true'] h3 { color: var(--riso-blue); }
+
+.pizza-desc { font-size: 12px; line-height: 1.35; color: var(--cream-muted); }
+
+.tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1.25px solid var(--riso-blue);
+  background: transparent;
+  color: var(--riso-blue);
+}
+.tag-popular { background: var(--riso-blue); color: #fff; }
+.tag-veg { background: transparent; color: var(--riso-blue); }
+.tag-chilli { border-color: var(--riso-magenta); color: var(--riso-magenta); }
+
+.pizza-prices { gap: 12px; font-family: var(--font-body); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.pizza-price b { margin-right: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: var(--cream-faint); }
+.pizza-price[data-picked='true'] { color: var(--ink); background: var(--riso-pink); padding: 0 5px; border-radius: 2px; box-shadow: 1.5px 1.5px 0 var(--ink); }
+.pizza-price[data-picked='true'] b { color: var(--ink); }
+
+.count-badge {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1.5px solid var(--ink);
+  background: var(--riso-pink);
+  color: var(--ink);
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.menu-row { border-radius: 2px; padding: 4px 8px; }
+.menu-row + .menu-row { box-shadow: 0 -1px 0 rgba(36, 34, 43, 0.12); }
+.menu-row-name { font-size: 13px; font-weight: 500; }
+.menu-row-name small { color: var(--cream-faint); }
+.menu-row-price { font-family: var(--font-body); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.menu-row[data-in-order='true'] .menu-row-name { color: var(--riso-blue); font-weight: 700; }
+
+.deals-cell { border: 1.5px solid var(--ink); border-radius: 4px; background: var(--halftone-blue), var(--paper-card); background-size: 6px 6px, auto; }
+.deals-cell h3 { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 18px; letter-spacing: 0.01em; text-transform: uppercase; color: var(--riso-blue); }
+.deal-row .menu-row-price { color: var(--riso-blue); font-weight: 700; }
+
+@media (hover: hover) and (pointer: fine) {
+  .pizza-card:hover { background-color: var(--board-hover); }
+  .menu-row:hover { background: var(--board-hover); }
+}
+
+/* ---------- Captions ---------- */
+
+.captions { border-top: 2px solid var(--ink); background: var(--paper-card); }
+.caption { font-size: 14px; color: var(--cream-faint); }
+.caption:last-child { font-size: 22px; font-weight: 700; letter-spacing: -0.005em; color: var(--ink); }
+.caption-who {
+  width: auto;
+  min-width: 78px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--cream-faint);
+}
+.caption:last-child .caption-who {
+  align-self: center;
+  padding: 3px 8px 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--riso-pink);
+  color: var(--ink);
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  transform: rotate(-3deg);
+  min-width: 0;
+  text-align: center;
+}
+.caption[data-speaker='agent'] .caption-text { font-family: var(--font-body); font-style: normal; color: var(--riso-blue); }
+.caption:last-child[data-speaker='agent'] .caption-who { background: var(--riso-blue); color: #fff; }
+
+.word[data-menu='true'] { color: var(--ink); background: rgba(255, 72, 176, 0.85); box-shadow: inset 0 -2px 0 var(--riso-blue); border-radius: 2px; padding: 0 2px; }
+.caption:not(:last-child) .word[data-menu='true'] { color: var(--riso-magenta); background: none; box-shadow: none; padding: 0; }
+.caption-tag { background: var(--ink); color: #fff; border-radius: 2px; }
+
+.listening { color: var(--riso-blue); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+[data-on='true'] .listening-dot, .listening[data-on='true'] > .listening-dot { background: var(--riso-pink); box-shadow: 0 0 0 3px rgba(255, 72, 176, 0.3); }
+
+/* ---------- House rules, toasts, chips ---------- */
+
+.rules-panel { border: 2px solid var(--ink); border-radius: 4px; background: var(--paper-card); box-shadow: 6px 6px 0 var(--riso-blue); }
+.rules-panel h3 { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 20px; letter-spacing: 0.01em; text-transform: uppercase; color: var(--riso-blue); }
+.rules-panel .rule-chip { background: var(--riso-pink); color: var(--ink); }
+.rule-uses { color: var(--riso-magenta); }
+
+[data-sonner-toaster] .toast { background: var(--paper-card); color: var(--ink); border: 2px solid var(--ink); border-left: 2px solid var(--ink); border-radius: 4px; box-shadow: 4px 4px 0 var(--riso-pink); font-family: var(--font-body); }
+
+.fly-chip { background: var(--riso-pink); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 3px; box-shadow: 3px 3px 0 var(--riso-blue); font-weight: 700; }
+
+/* ---------- Printer column: a blue ink panel the white receipt pops against ---------- */
+
+.printer-column {
+  border-left: 2px solid var(--ink);
+  background:
+    radial-gradient(circle, rgba(255, 72, 176, 0.42) 1.3px, transparent 1.8px) 0 0 / 8px 8px,
+    var(--riso-blue);
+}
+.printer-column::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--riso-blue);
+  -webkit-mask-image: radial-gradient(ellipse at 100% 0%, transparent 0%, #000 62%);
+  mask-image: radial-gradient(ellipse at 100% 0%, transparent 0%, #000 62%);
+  pointer-events: none;
+}
+.printer-shadow { background: rgba(8, 12, 40, 0.5); }
+
+.printer-top { border: 1.5px solid var(--ink); background: linear-gradient(#f1eee7, #d6d1c7); }
+.printer-face { border: 1.5px solid var(--ink); border-top: 0; background: linear-gradient(#3a393f, #262529); }
+.printer-badge { color: rgba(220, 216, 228, 0.5); }
+
+.lcd {
+  border: 2.5px solid #141317;
+  border-radius: 5px;
+  background-color: #a9d88b;
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 10px rgba(30, 60, 10, 0.45);
+}
+.lcd-label { color: rgba(20, 41, 10, 0.7); font-weight: 600; }
+.lcd-total { color: #14290a; text-shadow: none; font-weight: 600; }
+
+.key { border: 1.5px solid #111014; border-radius: 6px; background: linear-gradient(#5a5960, #3d3c42); color: #f2f0f5; box-shadow: 0 3px 0 #111014, inset 0 1px 0 rgba(255, 255, 255, 0.18); font-family: var(--font-body); font-weight: 700; }
+.key:active:not(:disabled) { box-shadow: 0 0 0 #111014, inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+.key-primary { background: linear-gradient(#ff5cba, #f03ba3); color: var(--ink); box-shadow: 0 3px 0 #111014, inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+.printer-note { color: #e6e3ec; }
+.printer-link { color: #ffb3dc; }
+
+/* ---------- Reduced motion keeps the look, only motion changes ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .caption:last-child .caption-who { transform: none; }
+}
+
+/* Meal deals as one slim strip under the pizzas, so every course fits on one screen. */
+.pizza-card { min-height: 104px; }
+.deals-cell {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+}
+.deals-cell h3 { margin: 0 10px 0 0; white-space: nowrap; }
+.deals-cell .deal-row { flex: 1; margin: 0; padding: 6px 10px; border-left: 1px solid rgba(36, 34, 43, 0.16); box-shadow: none; }
+.deals-cell .deal-row + .deal-row { box-shadow: none; }
+
+/* Descriptions are the least important thing on a card: one line. */
+.pizza-card { min-height: 94px; }
+.pizza-desc { -webkit-line-clamp: 1; }
+.menu-row { padding-top: 2px; padding-bottom: 2px; }
+
+/* Build your own: same inks as the rest of the board. */
+.build-card {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--halftone-pink), var(--riso-blue);
+  background-size: 7px 7px, auto;
+  color: #fff;
+  box-shadow: 3px 3px 0 var(--riso-pink);
+}
+.build-card h3 { font-family: 'Anton', sans-serif; font-style: normal; font-weight: 400; font-size: 22px; letter-spacing: 0.01em; text-transform: uppercase; color: #fff; text-shadow: var(--misregister); }
+.build-card p { color: rgba(255, 255, 255, 0.85); }
+.build-card-say { color: var(--riso-pink); font-weight: 600; }
