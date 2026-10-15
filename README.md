@@ -81,9 +81,7 @@ still waiting.
 |---|---|
 | kiosk → server | binary audio chunk (webm/opus from MediaRecorder; a chunk starting with the EBML header starts a new Deepgram stream) |
 | kiosk → server | `{type:"text", text}` — treated exactly like a final transcript chunk |
-| kiosk → server | `{type:"done"}` — Done button: server reads the order back and asks to confirm; a second press while awaiting confirmation goes straight to checkout |
-| kiosk → server | `{type:"checkout_now"}` — testing shortcut: skip the read-back, create the Checkout Session now |
-| kiosk → server | `{type:"speaking", on}` — kiosk audio started/stopped (server ignores mic transcripts while speaking unless barge-in is on) |
+| kiosk → server | `{type:"done"}` — checkout now (if cart non-empty) |
 | kiosk → server | `{type:"reset"}` — new order |
 | server → kiosk | `{type:"transcript", text, final}` |
 | server → kiosk | `{type:"cart", items:[{menu_id,name,qty,size,size_label,defaulted,price_id,unit_price_cents,line_total_cents,quote}], total_cents, currency}` |
@@ -91,14 +89,8 @@ still waiting.
 | server → kiosk | `{type:"checkout", url}` |
 | server → kiosk | `{type:"paid"}` |
 | server → kiosk | `{type:"error", text}` |
-| server → kiosk | `{type:"say", text, audio_url}` — kiosk speaks: show `text`, play `audio_url` (streamed mp3 from `GET /api/tts/:id`) |
-| server → kiosk | `{type:"stop_speaking"}` — customer talked over the kiosk (barge-in): stop audio now |
-| server → kiosk | `{type:"status", status}` — `"ordering"` \| `"awaiting_confirmation"` \| `"awaiting_payment"` \| `"paid"` |
 
-Connect with `/ws?bargein=0` to turn barge-in off (the kiosk page passes through its own `?bargein=0`). Default is on,
-for headset use; off means mic audio isn't sent while the kiosk talks, so it can't hear itself through speakers.
-
-HTTP: `GET /api/health`, `GET /api/menu`, `GET /api/tts/:id` (Deepgram Aura-2 mp3, streamed through; ids are one-minute, server-issued), `POST /webhook` (Stripe, raw body + signature check).
+HTTP: `GET /api/health`, `GET /api/menu`, `POST /webhook` (Stripe, raw body + signature check).
 
 ## Cart agent policy
 
@@ -110,18 +102,7 @@ HTTP: `GET /api/health`, `GET /api/menu`, `GET /api/tts/:id` (Deepgram Aura-2 mp
 - **§5 Sizes.** The model returns the size the customer said (or `null`); the server validates it against the item's
   variants, falls back to the default (shown as "(default)" in the cart, with a notice if the size was invalid), and
   keeps different sizes of one item as separate lines.
-- **§6 No prices from the model.** Prices and totals come from the menu (display) and Stripe Prices (charge). The
-  spoken reply is checked server-side: any money talk is replaced with "Lovely. Anything else for you?".
-- **§7 Out of stock.** `data/out-of-stock.json` (array of menu ids, re-read every call) — those items are never added,
-  and the reply says so and suggests something similar.
-- **Talking back.** The same agent call returns `reply` (≤ ~15 words, British cashier, one question at a time, or
-  null), `upsell_offered` and `confirm`. One upsell per order, server-enforced (and only with a pizza in the cart).
-  Speech only happens at end of turn (Deepgram `speech_final` / `UtteranceEnd`, `utterance_end_ms=1000`), using the
-  agent result for everything said so far; new speech before then drops the reply.
-- **Read-back before QR.** On `order_complete` the server (not the LLM) reads the order back with the total and
-  asks "Shall I bring up the payment code?" (`awaiting_confirmation`). "Yes" with an unchanged cart → Checkout;
-  "no" or any change → back to `ordering`.
-- **Voice.** Deepgram Aura-2 TTS, `TTS_MODEL` (default `aura-2-draco-en`: British, warm, baritone).
+- **§6 No prices from the model.** Prices and totals come from the menu (display) and Stripe Prices (charge).
 
 ## Files
 
@@ -130,10 +111,7 @@ data/menu.json        menu synced from Stripe (id, name, aliases, currency, cate
 server/index.ts       Express + WS hub, webhook
 server/order.ts       per-connection session: transcript, cart, status, agent serialisation, poller
 server/agent.ts       Claude cart reconcile + server-side policy validation
-server/stt.ts         Deepgram live STT (raw WebSocket, VAD/UtteranceEnd events)
-server/tts.ts         Deepgram Aura-2 TTS, GET /api/tts/:id streams mp3 through
-data/out-of-stock.json  menu ids that can't be ordered today
-web/voice.ts          kiosk audio: play/stop "say", speaking state, mic mute when barge-in is off
+server/stt.ts         Deepgram live STT (raw WebSocket)
 server/stripe.ts      Stripe client, Checkout creation, webhook verification
 server/seed.ts        read-only Stripe catalog -> menu.json sync
 web/                  kiosk UI (index.html, main.ts, style.css) + paid.html

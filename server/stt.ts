@@ -4,8 +4,7 @@
 import WebSocket from "ws";
 import { KEYTERMS } from "./menu.js";
 
-/** speechFinal = Deepgram thinks the speaker finished their turn (endpointing). */
-type OnTranscript = (text: string, final: boolean, speechFinal: boolean) => void;
+type OnTranscript = (text: string, final: boolean) => void;
 
 const EBML_MAGIC = Buffer.from([0x1a, 0x45, 0xdf, 0xa3]); // start of a new webm stream
 
@@ -18,12 +17,7 @@ export class Stt {
   private pending: Buffer[] = [];
   private header: Buffer | null = null; // first chunk of the current webm stream, replayed on reconnect
 
-  constructor(
-    private onTranscript: OnTranscript,
-    private onError: (msg: string) => void,
-    /** Deepgram UtteranceEnd: a gap of utterance_end_ms after the last word = end of turn. */
-    private onUtteranceEnd: () => void = () => {},
-  ) {}
+  constructor(private onTranscript: OnTranscript, private onError: (msg: string) => void) {}
 
   /** Forward one browser audio chunk. A chunk starting with the EBML header means a new recording. */
   push(chunk: Buffer) {
@@ -47,8 +41,6 @@ export class Stt {
       interim_results: "true",
       endpointing: "300",
       smart_format: "true",
-      vad_events: "true",
-      utterance_end_ms: "1000",
     });
     for (const k of KEYTERMS) params.append("keyterm", k);
     const dg = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, {
@@ -64,11 +56,9 @@ export class Stt {
     dg.on("message", (data) => {
       try {
         const msg = JSON.parse(data.toString());
-        if (msg.type === "UtteranceEnd") return this.onUtteranceEnd();
         if (msg.type !== "Results") return;
         const text: string = msg.channel?.alternatives?.[0]?.transcript ?? "";
-        if (text.trim()) this.onTranscript(text, !!msg.is_final, !!msg.speech_final);
-        else if (msg.speech_final) this.onUtteranceEnd(); // endpoint with an empty final still ends the turn
+        if (text.trim()) this.onTranscript(text, !!msg.is_final);
       } catch { /* ignore non-JSON */ }
     });
     dg.on("unexpected-response", (_req, res) => this.onError(`Deepgram rejected connection (HTTP ${res.statusCode})`));
