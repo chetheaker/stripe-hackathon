@@ -1,7 +1,10 @@
 import QRCode from "qrcode";
 
 // ---- WS contract -------------------------------------------------------------------------
-interface CartLine { menu_id: string; name: string; qty: number; unit_price_cents: number; line_total_cents: number; quote: string }
+interface CartLine {
+  menu_id: string; name: string; qty: number; unit_price_cents: number; line_total_cents: number; quote: string;
+  size: string; size_label: string | null; defaulted: boolean;
+}
 type ServerMsg =
   | { type: "transcript"; text: string; final: boolean }
   | { type: "cart"; items: CartLine[]; total_cents: number; currency: string }
@@ -70,25 +73,30 @@ function showTranscript(text: string, final: boolean) {
 function renderCart(items: CartLine[], total: number) {
   const seen = new Set<string>();
   for (const it of items) {
-    seen.add(it.menu_id);
-    let li = cartEl.querySelector<HTMLLIElement>(`li[data-id="${it.menu_id}"]:not(.removing)`);
+    const key = `${it.menu_id}:${it.size}`; // different sizes of one item are separate lines
+    seen.add(key);
+    let li = cartEl.querySelector<HTMLLIElement>(`li[data-id="${key}"]:not(.removing)`);
+    const size = it.size_label
+      ? ` <span class="size">— ${esc(it.size_label)}</span>${it.defaulted ? ` <span class="default-tag">(default)</span>` : ""}`
+      : "";
+    const sig = `${it.qty}|${it.quote}|${it.defaulted}`;
     const html = `
-      <div class="line-main"><span class="qty">${it.qty} ×</span><span class="name">${esc(it.name)}</span><span class="price">${money(it.line_total_cents)}</span></div>
+      <div class="line-main"><span class="qty">${it.qty} ×</span><span class="name">${esc(it.name)}${size}</span><span class="price">${money(it.line_total_cents)}</span></div>
       <div class="quote">“${esc(it.quote)}”</div>`;
     if (!li) {
       li = document.createElement("li");
-      li.dataset.id = it.menu_id;
+      li.dataset.id = key;
       li.className = "line adding";
       li.innerHTML = html;
       cartEl.append(li);
       li.addEventListener("animationend", () => li!.classList.remove("adding"), { once: true });
-    } else if (li.dataset.sig !== `${it.qty}|${it.quote}`) {
+    } else if (li.dataset.sig !== sig) {
       li.innerHTML = html;
       li.classList.remove("changed");
       void li.offsetWidth; // restart animation
       li.classList.add("changed");
     }
-    li.dataset.sig = `${it.qty}|${it.quote}`;
+    li.dataset.sig = sig;
   }
   for (const li of cartEl.querySelectorAll<HTMLLIElement>("li:not(.removing)")) {
     if (seen.has(li.dataset.id!)) continue;

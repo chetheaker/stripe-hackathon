@@ -2,12 +2,16 @@
 import { randomUUID } from "node:crypto";
 import type WebSocket from "ws";
 import { reconcile, type AgentResult } from "./agent.js";
-import { MENU_BY_ID, MENU_CURRENCY } from "./menu.js";
+import { MENU_BY_ID, MENU_CURRENCY, resolveVariant } from "./menu.js";
 import { createCheckout, isCheckoutPaid } from "./stripe.js";
 
 export type Status = "ordering" | "awaiting_payment" | "paid";
 export interface CartLine {
   menu_id: string; name: string; qty: number; unit_price_cents: number; line_total_cents: number; quote: string;
+  /** Variant size key and human label; size_label is null for single-size items. */
+  size: string; size_label: string | null; price_id: string;
+  /** True when the customer didn't say a size and the default was applied (multi-size items only). */
+  defaulted: boolean;
 }
 
 /** order_id -> session, so the webhook can find the right kiosk. */
@@ -78,9 +82,15 @@ export class OrderSession {
   private async apply(r: AgentResult, latest: boolean) {
     this.cart = r.items.map((it) => {
       const m = MENU_BY_ID.get(it.menu_id)!;
-      return { menu_id: m.id, name: m.name, qty: it.qty, unit_price_cents: m.price_cents, line_total_cents: m.price_cents * it.qty, quote: it.quote };
+      const v = resolveVariant(m, it.size)!; // validate() guarantees a real variant
+      return {
+        menu_id: m.id, name: m.name, qty: it.qty, unit_price_cents: v.price_cents, line_total_cents: v.price_cents * it.qty,
+        quote: it.quote, size: v.size, size_label: m.variants.length > 1 ? v.label : null, price_id: v.price_id,
+        defaulted: it.defaulted,
+      };
     });
     this.pushCart();
+    for (const n of r.notices) this.notice(n);
     for (const u of r.unrecognised) this.notice(`Sorry, we don't have "${u.text}" — ${u.reason}`);
     for (const n of r.needs_confirmation) this.notice(n.question);
     // Only act on "that's all" if no newer speech is waiting to be reconciled.
