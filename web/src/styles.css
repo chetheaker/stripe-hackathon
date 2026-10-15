@@ -151,6 +151,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .section-head {
+  position: relative;
   display: flex;
   align-items: baseline;
   gap: 12px;
@@ -168,8 +169,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .section-note { margin: 0; font-size: 12px; color: var(--cream-faint); }
 
-/* The next course we'd like them to try: header turns gold, the ask fades in. */
+/* The next course we'd like them to try: header turns gold, the ask fades in.
+   Out of flow and on one line, so every column's title and rule sit at the same height. */
 .spotlight-label {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  white-space: nowrap;
   font-size: 12px;
   color: var(--gold-ink);
   opacity: 0;

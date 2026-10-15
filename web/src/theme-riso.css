@@ -86,7 +86,7 @@ body { background: var(--paper-stock); color: var(--ink); }
   text-transform: uppercase;
   color: var(--ink);
 }
-.section-note { font-size: 12px; color: var(--cream-muted); }
+.section-note { font-size: 12px; line-height: 1; color: var(--cream-muted); }
 
 .board-section[data-spotlight='true'] .section-head h2 { color: var(--riso-blue); text-shadow: var(--misregister); }
 .spotlight-label {
@@ -98,6 +98,10 @@ body { background: var(--paper-stock); color: var(--ink); }
   background: var(--riso-pink);
   padding: 2px 7px;
   border-radius: 2px;
+  /* A sticker on the rule, clear of the title however narrow the column. */
+  top: 100%;
+  translate: 0 -30%;
+  z-index: 1;
 }
 
 /* Suggested course: a soft pink halftone wash behind the column. */
